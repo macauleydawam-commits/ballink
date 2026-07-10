@@ -148,7 +148,7 @@ export default function OwnerDashboard() {
           ))}
         </section>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24, alignItems: 'flex-start' }}>
+        <div className="owner-dashboard-grid">
           <div>
             {activeTab === 'overview' && (
               <>
@@ -484,6 +484,19 @@ export default function OwnerDashboard() {
             </div>
           </aside>
         </div>
+        <style>{`
+          .owner-dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 24px;
+            align-items: flex-start;
+          }
+          @media (max-width: 900px) {
+            .owner-dashboard-grid {
+              grid-template-columns: 1fr;
+            }
+          }
+        `}</style>
       </main>
     </div>
   );

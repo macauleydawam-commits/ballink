@@ -67,11 +67,41 @@ export default function PlayerDashboard() {
   } = useOnboarding();
 
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'matches', 'team', 'chat', 'profile'
+  const [loading, setLoading] = useState(false);
   const [activeSlot, setActiveSlot] = useState(null);
 
   // Search & Filter state
   const [searchArea, setSearchArea] = useState('');
   const [searchTime, setSearchTime] = useState('');
+
+  React.useEffect(() => {
+    setLoading(true);
+    const t = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(t);
+  }, [activeTab, searchArea, searchTime]);
+
+  const renderSkeletons = (count = 3, type = 'card') => {
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: type === 'list' ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+        {Array.from({ length: count }).map((_, idx) => (
+          <div key={idx} style={{
+            background: '#111c2a', borderRadius: 18, border: '1px solid rgba(255,255,255,0.03)', padding: 16,
+            display: 'flex', flexDirection: 'column', gap: 12, height: type === 'list' ? 70 : 130, overflow: 'hidden'
+          }}>
+            <div style={{ width: '40%', height: 16, borderRadius: 4, background: 'rgba(255,255,255,0.06)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+            <div style={{ width: '80%', height: 12, borderRadius: 4, background: 'rgba(255,255,255,0.04)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+            <div style={{ width: '60%', height: 12, borderRadius: 4, background: 'rgba(255,255,255,0.04)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+            {type !== 'list' && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 'auto' }}>
+                <div style={{ width: '30%', height: 14, borderRadius: 4, background: 'rgba(255,255,255,0.06)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+                <div style={{ width: '20%', height: 14, borderRadius: 4, background: 'rgba(255,255,255,0.06)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   // Edit booking modal state
   const [showEditBookingModal, setShowEditBookingModal] = useState(false);
@@ -248,25 +278,31 @@ export default function PlayerDashboard() {
               <h2 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 24, letterSpacing: 1, color: '#F5F5F0', marginBottom: 14 }}>
                 Nearby Pitches
               </h2>
-              <div className="horizontal-scroll" style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 10 }}>
-                {filterPitches(pitches).map(pitch => (
-                  <Link key={pitch.id} to={`/pitch/${pitch.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block', flexShrink: 0, width: 280 }}>
-                    <div style={{ background: '#111c2a', borderRadius: 18, border: '1px solid rgba(82,183,136,0.1)', overflow: 'hidden' }}>
-                      <div style={{ height: 120, background: '#1B4332', position: 'relative' }}>
-                        <div style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(82,183,136,0.2)', border: '1px solid rgba(82,183,136,0.4)', borderRadius: 100, padding: '3px 8px', fontSize: 10, color: '#52B788', fontWeight: 600 }}>AVAILABLE</div>
-                      </div>
-                      <div style={{ padding: 14 }}>
-                        <h4 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 18, margin: '0 0 4px', letterSpacing: 0.5 }}>{pitch.name}</h4>
-                        <p style={{ fontSize: 11, color: 'rgba(245,245,240,0.4)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}><MapPin size={10} /> {pitch.location}</p>
-                        <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 14, color: '#F4A300', fontWeight: 600 }}>₦{pitch.pricePerHour}/hr</span>
-                          <span style={{ fontSize: 11, color: 'rgba(245,245,240,0.5)' }}>{pitch.surface}</span>
+              {loading ? renderSkeletons(3, 'card') : (
+                <div className="horizontal-scroll" style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 10 }}>
+                  {filterPitches(pitches).length === 0 ? (
+                    <div style={{ padding: '24px', width: '100%', textAlign: 'center', background: '#111c2a', borderRadius: 18, border: '1px dashed rgba(82,183,136,0.2)', color: 'rgba(245,245,240,0.5)', fontSize: 13 }}>
+                      No pitches match your area search. Try searching "Rayfield" or "Terminus"!
+                    </div>
+                  ) : filterPitches(pitches).map(pitch => (
+                    <Link key={pitch.id} to={`/pitch/${pitch.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block', flexShrink: 0, width: 280 }}>
+                      <div style={{ background: '#111c2a', borderRadius: 18, border: '1px solid rgba(82,183,136,0.1)', overflow: 'hidden' }}>
+                        <div style={{ height: 120, background: '#1B4332', position: 'relative' }}>
+                          <div style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(82,183,136,0.2)', border: '1px solid rgba(82,183,136,0.4)', borderRadius: 100, padding: '3px 8px', fontSize: 10, color: '#52B788', fontWeight: 600 }}>AVAILABLE</div>
+                        </div>
+                        <div style={{ padding: 14 }}>
+                          <h4 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 18, margin: '0 0 4px', letterSpacing: 0.5 }}>{pitch.name}</h4>
+                          <p style={{ fontSize: 11, color: 'rgba(245,245,240,0.4)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}><MapPin size={10} /> {pitch.location}</p>
+                          <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 14, color: '#F4A300', fontWeight: 600 }}>₦{pitch.pricePerHour}/hr</span>
+                            <span style={{ fontSize: 11, color: 'rgba(245,245,240,0.5)' }}>{pitch.surface}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* SECTION: AVAILABLE PITCHES TODAY */}
@@ -274,25 +310,31 @@ export default function PlayerDashboard() {
               <h2 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 24, letterSpacing: 1, color: '#F5F5F0', marginBottom: 14 }}>
                 Available Pitches Today
               </h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-                {filterPitches(pitches.filter(p => p.availableSlots && p.availableSlots.length > 0)).map(pitch => (
-                  <div key={pitch.id} style={{ background: '#111c2a', borderRadius: 18, border: '1px solid rgba(82,183,136,0.1)', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center' }}>
-                      <h4 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 18, margin: 0, letterSpacing: 0.5 }}>{pitch.name}</h4>
-                      <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 14, color: '#F4A300', fontWeight: 600 }}>₦{pitch.pricePerHour}/hr</span>
+              {loading ? renderSkeletons(2, 'card') : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                  {filterPitches(pitches.filter(p => p.availableSlots && p.availableSlots.length > 0)).length === 0 ? (
+                    <div style={{ gridColumn: '1 / -1', padding: '24px', textAlign: 'center', background: '#111c2a', borderRadius: 18, border: '1px dashed rgba(82,183,136,0.2)', color: 'rgba(245,245,240,0.5)', fontSize: 13 }}>
+                      No available pitch times fit your search criteria right now.
                     </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                      {pitch.availableSlots.map(time => (
-                        <Link key={time} to={`/pitch/${pitch.id}`} style={{
-                          fontFamily: '"JetBrains Mono", monospace', fontSize: 12, fontWeight: 600,
-                          color: '#52B788', background: 'rgba(82,183,136,0.1)', border: '1px solid rgba(82,183,136,0.2)',
-                          padding: '5px 12px', borderRadius: 8, textDecoration: 'none'
-                        }}>{time}</Link>
-                      ))}
+                  ) : filterPitches(pitches.filter(p => p.availableSlots && p.availableSlots.length > 0)).map(pitch => (
+                    <div key={pitch.id} style={{ background: '#111c2a', borderRadius: 18, border: '1px solid rgba(82,183,136,0.1)', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center' }}>
+                        <h4 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 18, margin: 0, letterSpacing: 0.5 }}>{pitch.name}</h4>
+                        <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 14, color: '#F4A300', fontWeight: 600 }}>₦{pitch.pricePerHour}/hr</span>
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {pitch.availableSlots.map(time => (
+                          <Link key={time} to={`/pitch/${pitch.id}`} style={{
+                            fontFamily: '"JetBrains Mono", monospace', fontSize: 12, fontWeight: 600,
+                            color: '#52B788', background: 'rgba(82,183,136,0.1)', border: '1px solid rgba(82,183,136,0.2)',
+                            padding: '5px 12px', borderRadius: 8, textDecoration: 'none'
+                          }}>{time}</Link>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* SECTION: MATCHES HAPPENING TODAY */}
@@ -300,27 +342,33 @@ export default function PlayerDashboard() {
               <h2 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 24, letterSpacing: 1, color: '#F5F5F0', marginBottom: 14 }}>
                 Matches Happening Today
               </h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {filterMatches(MATCHES_HAPPENING_TODAY).map(match => (
-                  <Link key={match.id} to={`/match/${match.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: 14, display: 'flex', justify: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                          {match.isLive && <span style={{ padding: '2px 8px', borderRadius: 100, background: 'rgba(230,57,70,0.15)', color: '#E63946', fontSize: 10, fontWeight: 700, fontFamily: '"JetBrains Mono", monospace' }}>LIVE</span>}
-                          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 600 }}>{match.name}</span>
-                        </div>
-                        <div style={{ fontSize: 12, color: 'rgba(245,245,240,0.4)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <MapPin size={10} /> {match.pitchName} • {match.skillLevel}
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 14, color: '#F4A300', fontWeight: 600 }}>{match.time}</div>
-                        <div style={{ fontSize: 11, color: '#52B788' }}>{match.spotsLeft} spots remaining</div>
-                      </div>
+              {loading ? renderSkeletons(2, 'list') : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {filterMatches(MATCHES_HAPPENING_TODAY).length === 0 ? (
+                    <div style={{ padding: '20px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.06)', borderRadius: 14, color: 'rgba(245,245,240,0.5)', fontSize: 13 }}>
+                      No matches scheduled for today match your search. Grab some friends and book a pitch!
                     </div>
-                  </Link>
-                ))}
-              </div>
+                  ) : filterMatches(MATCHES_HAPPENING_TODAY).map(match => (
+                    <Link key={match.id} to={`/match/${match.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                      <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: 14, display: 'flex', justify: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                            {match.isLive && <span style={{ padding: '2px 8px', borderRadius: 100, background: 'rgba(230,57,70,0.15)', color: '#E63946', fontSize: 10, fontWeight: 700, fontFamily: '"JetBrains Mono", monospace' }}>LIVE</span>}
+                            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 600 }}>{match.name}</span>
+                          </div>
+                          <div style={{ fontSize: 12, color: 'rgba(245,245,240,0.4)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <MapPin size={10} /> {match.pitchName} • {match.skillLevel}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 14, color: '#F4A300', fontWeight: 600 }}>{match.time}</div>
+                          <div style={{ fontSize: 11, color: '#52B788' }}>{match.spotsLeft} spots remaining</div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* SECTION: "NEED PLAYERS" GAMES */}
@@ -328,34 +376,40 @@ export default function PlayerDashboard() {
               <h2 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 24, letterSpacing: 1, color: '#F5F5F0', marginBottom: 14 }}>
                 "Need Players" Games
               </h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-                {filterMatches(NEED_PLAYERS_GAMES).map(match => {
-                  const pct = (match.spotsTaken / match.spotsTotal) * 100;
-                  return (
-                    <Link key={match.id} to={`/match/${match.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                      <div style={{ background: '#111c2a', borderRadius: 18, border: '1px solid rgba(255,255,255,0.06)', padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <div>
-                          <h4 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 2px' }}>{match.name}</h4>
-                          <p style={{ fontSize: 11, color: 'rgba(245,245,240,0.4)' }}>{match.pitchName}</p>
-                        </div>
-                        <div>
-                          <div style={{ display: 'flex', justify: 'space-between', fontSize: 11, color: 'rgba(245,245,240,0.5)', marginBottom: 4 }}>
-                            <span>Squad build</span>
-                            <span style={{ fontFamily: '"JetBrains Mono", monospace', color: '#52B788' }}>{match.spotsTaken}/{match.spotsTotal} Joined</span>
+              {loading ? renderSkeletons(3, 'card') : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                  {filterMatches(NEED_PLAYERS_GAMES).length === 0 ? (
+                    <div style={{ gridColumn: '1 / -1', padding: '24px', textAlign: 'center', background: '#111c2a', borderRadius: 18, border: '1px dashed rgba(255,255,255,0.06)', color: 'rgba(245,245,240,0.5)', fontSize: 13 }}>
+                      No squad games are currently looking for players. Start a game and invite the community!
+                    </div>
+                  ) : filterMatches(NEED_PLAYERS_GAMES).map(match => {
+                    const pct = (match.spotsTaken / match.spotsTotal) * 100;
+                    return (
+                      <Link key={match.id} to={`/match/${match.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <div style={{ background: '#111c2a', borderRadius: 18, border: '1px solid rgba(255,255,255,0.06)', padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          <div>
+                            <h4 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 2px' }}>{match.name}</h4>
+                            <p style={{ fontSize: 11, color: 'rgba(245,245,240,0.4)' }}>{match.pitchName}</p>
                           </div>
-                          <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 10, overflow: 'hidden' }}>
-                            <div style={{ width: `${pct}%`, height: '100%', background: '#52B788' }} />
+                          <div>
+                            <div style={{ display: 'flex', justify: 'space-between', fontSize: 11, color: 'rgba(245,245,240,0.5)', marginBottom: 4 }}>
+                              <span>Squad build</span>
+                              <span style={{ fontFamily: '"JetBrains Mono", monospace', color: '#52B788' }}>{match.spotsTaken}/{match.spotsTotal} Joined</span>
+                            </div>
+                            <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 10, overflow: 'hidden' }}>
+                              <div style={{ width: `${pct}%`, height: '100%', background: '#52B788' }} />
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center', pt: 4, borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                            <span style={{ fontSize: 11, color: 'rgba(245,245,240,0.4)' }}>By {match.organiser}</span>
+                            <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, color: '#F4A300', fontWeight: 600 }}>₦{match.fee}</span>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center', pt: 4, borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-                          <span style={{ fontSize: 11, color: 'rgba(245,245,240,0.4)' }}>By {match.organiser}</span>
-                          <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, color: '#F4A300', fontWeight: 600 }}>₦{match.fee}</span>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* SECTION: FEATURED PITCHES */}
@@ -363,25 +417,31 @@ export default function PlayerDashboard() {
               <h2 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 24, letterSpacing: 1, color: '#F5F5F0', marginBottom: 14 }}>
                 Featured Pitches
               </h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
-                {filterPitches(pitches).map(pitch => (
-                  <Link key={pitch.id} to={`/pitch/${pitch.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <div style={{ background: '#111c2a', borderRadius: 18, border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-                      <div style={{ height: 100, background: '#1B4332', display: 'flex', alignItems: 'center', justify: 'center' }}>
-                        <span style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 24, letterSpacing: 1, opacity: 0.15 }}>BALL_LINK</span>
-                      </div>
-                      <div style={{ padding: 14 }}>
-                        <h4 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 2px' }}>{pitch.name}</h4>
-                        <p style={{ fontSize: 11, color: 'rgba(245,245,240,0.4)', marginBottom: 8 }}>{pitch.location}</p>
-                        <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: 11, color: 'rgba(245,245,240,0.5)' }}>{pitch.surface}</span>
-                          <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 13, color: '#F4A300', fontWeight: 600 }}>₦{pitch.pricePerHour}/hr</span>
+              {loading ? renderSkeletons(3, 'card') : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
+                  {filterPitches(pitches).length === 0 ? (
+                    <div style={{ gridColumn: '1 / -1', padding: '24px', textAlign: 'center', background: '#111c2a', borderRadius: 18, border: '1px dashed rgba(255,255,255,0.06)', color: 'rgba(245,245,240,0.5)', fontSize: 13 }}>
+                      No featured pitches found matching your search.
+                    </div>
+                  ) : filterPitches(pitches).map(pitch => (
+                    <Link key={pitch.id} to={`/pitch/${pitch.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                      <div style={{ background: '#111c2a', borderRadius: 18, border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                        <div style={{ height: 100, background: '#1B4332', display: 'flex', alignItems: 'center', justify: 'center' }}>
+                          <span style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 24, letterSpacing: 1, opacity: 0.15 }}>BALL_LINK</span>
+                        </div>
+                        <div style={{ padding: 14 }}>
+                          <h4 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 2px' }}>{pitch.name}</h4>
+                          <p style={{ fontSize: 11, color: 'rgba(245,245,240,0.4)', marginBottom: 8 }}>{pitch.location}</p>
+                          <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 11, color: 'rgba(245,245,240,0.5)' }}>{pitch.surface}</span>
+                            <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 13, color: '#F4A300', fontWeight: 600 }}>₦{pitch.pricePerHour}/hr</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* SECTION: UPCOMING TOURNAMENTS */}
@@ -420,32 +480,38 @@ export default function PlayerDashboard() {
             <h2 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 32, letterSpacing: 1, color: '#F5F5F0', marginBottom: 16 }}>
               All Open Matches in Jos
             </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {filterMatches(LIVE_MATCHES).map(match => {
-                const left = match.spotsTotal - match.spotsTaken;
-                return (
-                  <Link key={match.id} to={`/match/${match.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <div style={{ background: '#111c2a', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 18, padding: 16, display: 'flex', justify: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-                      <div>
-                        <h4 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 20, margin: '0 0 4px', letterSpacing: 0.5 }}>{match.name}</h4>
-                        <div style={{ fontSize: 12, color: 'rgba(245,245,240,0.4)', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={10} /> {match.pitchName}</span>
-                          <span>Skill: {match.skillLevel}</span>
-                          <span>Fee: ₦{match.fee}</span>
+            {loading ? renderSkeletons(4, 'list') : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {filterMatches(LIVE_MATCHES).length === 0 ? (
+                  <div style={{ padding: '32px', textAlign: 'center', background: '#111c2a', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 18, color: 'rgba(245,245,240,0.5)', fontSize: 13 }}>
+                    No open matches match your query. Try adjusting your search details or select another time slot!
+                  </div>
+                ) : filterMatches(LIVE_MATCHES).map(match => {
+                  const left = match.spotsTotal - match.spotsTaken;
+                  return (
+                    <Link key={match.id} to={`/match/${match.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                      <div style={{ background: '#111c2a', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 18, padding: 16, display: 'flex', justify: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+                        <div>
+                          <h4 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 20, margin: '0 0 4px', letterSpacing: 0.5 }}>{match.name}</h4>
+                          <div style={{ fontSize: 12, color: 'rgba(245,245,240,0.4)', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={10} /> {match.pitchName}</span>
+                            <span>Skill: {match.skillLevel}</span>
+                            <span>Fee: ₦{match.fee}</span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 16, color: '#F4A300', fontWeight: 600 }}>{match.time}</div>
+                            <div style={{ fontSize: 11, color: '#52B788' }}>{left} spots left</div>
+                          </div>
+                          <button style={{ padding: '8px 16px', borderRadius: 8, background: '#F4A300', border: 'none', color: '#0D1B2A', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Join</button>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 16, color: '#F4A300', fontWeight: 600 }}>{match.time}</div>
-                          <div style={{ fontSize: 11, color: '#52B788' }}>{left} spots left</div>
-                        </div>
-                        <button style={{ padding: '8px 16px', borderRadius: 8, background: '#F4A300', border: 'none', color: '#0D1B2A', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Join</button>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -854,6 +920,10 @@ export default function PlayerDashboard() {
         .profile-layout { display: grid; grid-template-columns: 1.2fr 1.8fr; gap: 24px; }
         @media(max-width: 768px) {
           .profile-layout { grid-template-columns: 1fr; }
+        }
+        @keyframes skeletonPulse {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 0.35; }
         }
       `}</style>
     </div>

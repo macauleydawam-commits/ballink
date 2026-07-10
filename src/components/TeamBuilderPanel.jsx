@@ -110,7 +110,7 @@ export default function TeamBuilderPanel() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20, alignItems: 'start' }}>
+      <div className="team-builder-grid">
         <div style={{ background: 'linear-gradient(to bottom, #1e5038, #143628)', padding: 20, borderRadius: 28, border: '2px solid rgba(82,183,136,0.25)', boxShadow: '0 24px 60px rgba(0,0,0,0.4)' }}>
           <div style={{ marginBottom: 18, display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <div style={{ minWidth: 220 }}>
@@ -383,6 +383,19 @@ export default function TeamBuilderPanel() {
           </div>
         </div>
       )}
+      <style>{`
+        .team-builder-grid {
+          display: grid;
+          grid-template-columns: 1fr 360px;
+          gap: 20px;
+          align-items: start;
+        }
+        @media (max-width: 900px) {
+          .team-builder-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
     </div>
   );
 }
