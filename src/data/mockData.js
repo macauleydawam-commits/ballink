@@ -1,6 +1,5 @@
-// BallLink mock data — Stage 1
+// BallLink mock data — Stage 3
 // Structured for easy swap to live API calls.
-// Every list is a plain array of objects; swap fetch/useState calls in consuming components.
 
 export const FEATURED_PITCHES = [
   {
@@ -133,5 +132,181 @@ export const HOW_IT_WORKS = [
     title: 'Show Up and Play',
     description:
       'Get your confirmation, show up at kick-off time, and play. Rate the pitch after to help the community.',
+  },
+];
+
+// --- Stage 3 Extra Player Dashboard Datasets ---
+
+export const NEARBY_PITCHES = [
+  {
+    id: 'pitch-001',
+    name: 'Terminus Turf Arena',
+    location: 'Terminus Road, Jos (0.8km)',
+    surface: '5-a-side • Turf',
+    pricePerHour: 8500,
+    rating: 4.8,
+    reviewCount: 124,
+    available: true,
+    tags: ['Close to you', 'Floodlit'],
+    imageGradient: 'from-pitch-green via-[#0f3326] to-night-navy',
+  },
+  {
+    id: 'pitch-004',
+    name: 'Naraguta Mini Pitch',
+    location: 'Naraguta, Jos North (2.1km)',
+    surface: '5-a-side • Turf',
+    pricePerHour: 6000,
+    rating: 4.3,
+    reviewCount: 56,
+    available: true,
+    tags: ['Affordable', 'Parking'],
+    imageGradient: 'from-[#1b4332] via-[#0d2a1e] to-night-navy',
+  },
+  {
+    id: 'pitch-005',
+    name: 'Lamingo Golf Turf',
+    location: 'Lamingo, Jos (3.5km)',
+    surface: '7-a-side • Hybrid',
+    pricePerHour: 10000,
+    rating: 4.5,
+    reviewCount: 42,
+    available: true,
+    tags: ['Scenic View', 'Water'],
+    imageGradient: 'from-[#1a3a5c] via-[#0f2540] to-night-navy',
+  },
+];
+
+export const AVAILABLE_PITCHES_TODAY = [
+  {
+    id: 'pitch-001',
+    name: 'Terminus Turf Arena',
+    location: 'Terminus Road, Jos',
+    surface: '5-a-side',
+    pricePerHour: 8500,
+    rating: 4.8,
+    availableSlots: ['17:00', '18:00', '21:00'],
+    imageGradient: 'from-pitch-green via-[#0f3326] to-night-navy',
+  },
+  {
+    id: 'pitch-002',
+    name: 'Rock City Football Centre',
+    location: 'Rayfield, Jos South',
+    surface: '7-a-side',
+    pricePerHour: 12000,
+    rating: 4.6,
+    availableSlots: ['16:00', '20:00'],
+    imageGradient: 'from-[#1a3a5c] via-[#0f2540] to-night-navy',
+  },
+  {
+    id: 'pitch-004',
+    name: 'Naraguta Mini Pitch',
+    location: 'Naraguta, Jos North',
+    surface: '5-a-side',
+    pricePerHour: 6000,
+    rating: 4.3,
+    availableSlots: ['15:00', '19:00', '20:00'],
+    imageGradient: 'from-[#1b4332] via-[#0d2a1e] to-night-navy',
+  },
+];
+
+export const MATCHES_HAPPENING_TODAY = [
+  {
+    id: 'match-001',
+    name: 'Evening Run — 5-a-side',
+    pitchName: 'Terminus Turf Arena',
+    time: '18:00',
+    fee: 1500,
+    skillLevel: 'Mixed',
+    spotsLeft: 2,
+    isLive: true,
+  },
+  {
+    id: 'match-002',
+    name: 'Friday Night Ballers',
+    pitchName: 'Rock City Football Centre',
+    time: '20:00',
+    fee: 2000,
+    skillLevel: 'Intermediate',
+    spotsLeft: 4,
+    isLive: true,
+  },
+  {
+    id: 'match-005',
+    name: 'Tudun Wada Kickabout',
+    pitchName: 'Tudun Wada School Ground',
+    time: '17:00',
+    fee: 500,
+    skillLevel: 'Open to All',
+    spotsLeft: 6,
+    isLive: false,
+  },
+];
+
+export const NEED_PLAYERS_GAMES = [
+  {
+    id: 'match-001',
+    name: 'Evening Run — 5-a-side',
+    pitchName: 'Terminus Turf Arena',
+    time: '18:00 Today',
+    spotsTotal: 10,
+    spotsTaken: 8,
+    fee: 1500,
+    organiser: 'Chukwuemeka A.',
+  },
+  {
+    id: 'match-003',
+    name: 'Saturday Morning League',
+    pitchName: 'Naraguta Mini Pitch',
+    time: '08:00 Tomorrow',
+    spotsTotal: 10,
+    spotsTaken: 4,
+    fee: 1000,
+    organiser: 'Abubakar S.',
+  },
+  {
+    id: 'match-006',
+    name: 'Rayfield Derby 11v11',
+    pitchName: 'Rock City Football Centre',
+    time: '16:00 Saturday',
+    spotsTotal: 22,
+    spotsTaken: 12,
+    fee: 1200,
+    organiser: 'Gyang P.',
+  },
+];
+
+export const UPCOMING_TOURNAMENTS = [
+  {
+    id: 'tourney-001',
+    name: 'Jos Christmas Cup 2026',
+    date: 'Dec 15 - Dec 28',
+    format: '7-a-side Knockout',
+    entryFee: 15000,
+    prizePool: '₦250,000',
+    organiser: 'Plateau Grassroots FA',
+    registeredTeams: 12,
+    maxTeams: 16,
+  },
+  {
+    id: 'tourney-002',
+    name: 'Rayfield Turf Masters',
+    date: 'Nov 05 - Nov 07',
+    format: '5-a-side Group Stage',
+    entryFee: 10000,
+    prizePool: '₦150,000',
+    organiser: 'Rock City FC',
+    registeredTeams: 8,
+    maxTeams: 8,
+  },
+  {
+    id: 'tourney-003',
+    name: 'Plateau Unity League',
+    date: 'Oct 10 - Nov 20',
+    format: '11-a-side League',
+    entryFee: 30000,
+    prizePool: '₦500,000',
+    organiser: 'Plateau State Sports Council',
+    registeredTeams: 18,
+    maxTeams: 24,
   },
 ];
