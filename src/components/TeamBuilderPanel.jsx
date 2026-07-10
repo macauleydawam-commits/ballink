@@ -40,10 +40,13 @@ export default function TeamBuilderPanel() {
     addBenchPlayer,
     removeBenchPlayer,
     setTeamManager,
+    createNewTeam,
     createChatWithPlayer,
   } = useOnboarding();
 
   const [activeSlot, setActiveSlot] = useState(null);
+  const [showNewTeam, setShowNewTeam] = useState(false);
+  const [newTeamDraft, setNewTeamDraft] = useState('');
 
   const currentFormation = FORMATIONS[teamBuilder.formation] || FORMATIONS['4-3-3'];
   const benchPlayers = teamBuilder.bench;
@@ -74,7 +77,7 @@ export default function TeamBuilderPanel() {
             Create your squad, assign players to the formation, and manage your bench and manager selection.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           {Object.keys(FORMATIONS).map((formation) => (
             <button
               key={formation}
@@ -90,6 +93,20 @@ export default function TeamBuilderPanel() {
               {formation}
             </button>
           ))}
+          {/* New Team button */}
+          <button
+            type="button"
+            onClick={() => { setNewTeamDraft(''); setShowNewTeam(true); }}
+            style={{
+              padding: '10px 18px', borderRadius: 14,
+              background: 'rgba(82,183,136,0.1)',
+              color: '#52B788',
+              border: '1px solid rgba(82,183,136,0.25)',
+              cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 600,
+            }}
+          >
+            + New Team
+          </button>
         </div>
       </div>
 
@@ -293,6 +310,79 @@ export default function TeamBuilderPanel() {
           <div style={{ fontWeight: 700, color: '#F5F5F0' }}>{teamBuilder.manager}</div>
         </div>
       </div>
+
+      {/* ── NEW TEAM MODAL ─────────────────────────────────── */}
+      {showNewTeam && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          {/* Backdrop */}
+          <div
+            onClick={() => setShowNewTeam(false)}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}
+          />
+          {/* Panel */}
+          <div style={{
+            position: 'relative', zIndex: 1, width: '100%', maxWidth: 400,
+            background: '#111c2a', border: '1px solid rgba(82,183,136,0.3)',
+            borderRadius: 24, padding: 28, boxShadow: '0 30px 70px rgba(0,0,0,0.6)',
+          }}>
+            {/* Close */}
+            <button
+              onClick={() => setShowNewTeam(false)}
+              style={{ position: 'absolute', right: 18, top: 18, background: 'none', border: 'none', color: 'rgba(245,245,240,0.4)', cursor: 'pointer', fontSize: 20, lineHeight: 1 }}
+            >✕</button>
+
+            <h2 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 28, color: '#F5F5F0', margin: '0 0 6px', letterSpacing: 1 }}>CREATE NEW TEAM</h2>
+            <p style={{ fontSize: 13, color: 'rgba(245,245,240,0.45)', marginBottom: 22 }}>All current squad and bench assignments will be cleared.</p>
+
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(245,245,240,0.7)', display: 'block', marginBottom: 8 }}>Team Name</label>
+            <input
+              autoFocus
+              value={newTeamDraft}
+              onChange={e => setNewTeamDraft(e.target.value)}
+              placeholder="e.g. Rayfield FC"
+              onKeyDown={e => {
+                if (e.key === 'Enter' && newTeamDraft.trim()) {
+                  createNewTeam(newTeamDraft.trim());
+                  setShowNewTeam(false);
+                }
+              }}
+              style={{
+                width: '100%', padding: '12px 14px', borderRadius: 12,
+                background: '#0D1B2A', border: '1px solid rgba(82,183,136,0.25)',
+                color: '#F5F5F0', fontFamily: 'Inter, sans-serif', fontSize: 14,
+                outline: 'none', marginBottom: 18, boxSizing: 'border-box',
+              }}
+            />
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setShowNewTeam(false)}
+                style={{
+                  flex: 1, padding: '12px', borderRadius: 12,
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#F5F5F0', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 600,
+                }}
+              >Cancel</button>
+              <button
+                onClick={() => {
+                  if (!newTeamDraft.trim()) return;
+                  createNewTeam(newTeamDraft.trim());
+                  setShowNewTeam(false);
+                }}
+                disabled={!newTeamDraft.trim()}
+                style={{
+                  flex: 2, padding: '12px', borderRadius: 12,
+                  background: newTeamDraft.trim() ? 'linear-gradient(135deg, #52B788, #1B4332)' : 'rgba(82,183,136,0.1)',
+                  border: 'none', color: '#F5F5F0',
+                  cursor: newTeamDraft.trim() ? 'pointer' : 'not-allowed',
+                  fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 700,
+                  boxShadow: newTeamDraft.trim() ? '0 4px 16px rgba(82,183,136,0.3)' : 'none',
+                }}
+              >Create Team</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

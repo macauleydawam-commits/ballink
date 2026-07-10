@@ -88,6 +88,7 @@ export function OnboardingProvider({ children }) {
     preferredFoot: 'Right',
     businessName: 'Jos Turf City',
     contactNumber: '+234 803 123 4567',
+    avatar: null, // base64 data-URL of profile photo
     stats: {
       matchesPlayed: 28,
       goals: 12,
@@ -173,6 +174,7 @@ export function OnboardingProvider({ children }) {
       preferredFoot: '',
       businessName: '',
       contactNumber: '',
+      avatar: null,
       stats: {
         matchesPlayed: 0,
         goals: 0,
@@ -252,6 +254,18 @@ export function OnboardingProvider({ children }) {
 
   const setTeamManager = (manager) => {
     setTeamBuilder((prev) => ({ ...prev, manager }));
+  };
+
+  // Create a fresh team with a new name, clearing all squad/bench assignments
+  const createNewTeam = (teamName) => {
+    setTeamBuilder({
+      teamName: teamName || 'New Team',
+      formation: '4-3-3',
+      manager: 'You',
+      bench: [],
+      availablePlayers: DEFAULT_PLAYERS,
+      squad: buildDefaultSquad('', ''),
+    });
   };
 
   // Pitch actions
@@ -377,6 +391,7 @@ export function OnboardingProvider({ children }) {
       addBenchPlayer,
       removeBenchPlayer,
       setTeamManager,
+      createNewTeam,
       chats,
       chatMessages,
       markChatRead,

@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useOnboarding } from '../context/OnboardingContext';
 import {
   Home, Users, MessageSquare, User, Search, MapPin, Star,
   Clock, LogOut, ChevronRight, Filter, AlertCircle, Plus, Send,
-  Calendar, Trash2, Edit3, X, CheckCircle, Trophy, Minus
+  Calendar, Trash2, Edit3, X, CheckCircle, Trophy, Minus, Camera
 } from 'lucide-react';
 import StarRating from '../components/ui/StarRating';
 import TeamBuilderPanel from '../components/TeamBuilderPanel';
@@ -63,6 +63,7 @@ export default function PlayerDashboard() {
     chats,
     markChatRead,
     pitches,
+    updateProfile,
   } = useOnboarding();
 
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'matches', 'team', 'chat', 'profile'
@@ -130,6 +131,18 @@ export default function PlayerDashboard() {
     if (window.confirm("Are you sure you want to cancel this booking?")) {
       cancelBooking(bookingId);
     }
+  };
+
+  // Avatar upload
+  const avatarInputRef = useRef(null);
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      updateProfile({ avatar: evt.target.result });
+    };
+    reader.readAsDataURL(file);
   };
 
   // Filtered lists based on search
@@ -236,7 +249,7 @@ export default function PlayerDashboard() {
                 Nearby Pitches
               </h2>
               <div className="horizontal-scroll" style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 10 }}>
-                {filterPitches(NEARBY_PITCHES).map(pitch => (
+                {filterPitches(pitches).map(pitch => (
                   <Link key={pitch.id} to={`/pitch/${pitch.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block', flexShrink: 0, width: 280 }}>
                     <div style={{ background: '#111c2a', borderRadius: 18, border: '1px solid rgba(82,183,136,0.1)', overflow: 'hidden' }}>
                       <div style={{ height: 120, background: '#1B4332', position: 'relative' }}>
@@ -262,7 +275,7 @@ export default function PlayerDashboard() {
                 Available Pitches Today
               </h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-                {filterPitches(AVAILABLE_PITCHES_TODAY).map(pitch => (
+                {filterPitches(pitches.filter(p => p.availableSlots && p.availableSlots.length > 0)).map(pitch => (
                   <div key={pitch.id} style={{ background: '#111c2a', borderRadius: 18, border: '1px solid rgba(82,183,136,0.1)', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center' }}>
                       <h4 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 18, margin: 0, letterSpacing: 0.5 }}>{pitch.name}</h4>
@@ -540,8 +553,42 @@ export default function PlayerDashboard() {
                 border: '1px solid rgba(82,183,136,0.25)', borderRadius: 24, padding: 28,
                 boxShadow: '0 20px 40px rgba(0,0,0,0.4)', textAlign: 'center'
               }}>
-                <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '2px solid rgba(244,163,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                  <User size={40} style={{ color: '#F4A300' }} />
+                {/* Tappable avatar with camera badge */}
+                <div
+                  style={{ position: 'relative', width: 80, height: 80, margin: '0 auto 16px', cursor: 'pointer' }}
+                  title="Change profile photo"
+                  onClick={() => avatarInputRef.current?.click()}
+                >
+                  <div style={{
+                    width: 80, height: 80, borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '2px solid rgba(244,163,0,0.4)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    overflow: 'hidden',
+                  }}>
+                    {userProfile.avatar
+                      ? <img src={userProfile.avatar} alt="profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : <User size={40} style={{ color: '#F4A300' }} />
+                    }
+                  </div>
+                  {/* Camera badge */}
+                  <div style={{
+                    position: 'absolute', bottom: 2, right: 2,
+                    width: 24, height: 24, borderRadius: '50%',
+                    background: '#F4A300',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    border: '2px solid #0D1B2A',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+                  }}>
+                    <Camera size={12} style={{ color: '#0D1B2A' }} />
+                  </div>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handleAvatarChange}
+                  />
                 </div>
                 <h3 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 32, letterSpacing: 1, color: '#F5F5F0', margin: '0 0 6px' }}>
                   {userProfile.name || 'Anonymous Player'}

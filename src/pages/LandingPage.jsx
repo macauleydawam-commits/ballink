@@ -5,6 +5,7 @@ import {
   Clock, Zap, Shield, Star, TrendingUp, Play,
 } from 'lucide-react';
 import { FEATURED_PITCHES, LIVE_MATCHES, HOW_IT_WORKS } from '../data/mockData';
+import { useOnboarding } from '../context/OnboardingContext';
 
 // ─── NAVBAR ──────────────────────────────────────────────────────────────────
 function Navbar() {
@@ -575,6 +576,7 @@ function HowItWorks() {
 
 // ─── FEATURED PITCHES ─────────────────────────────────────────────────────────
 function FeaturedPitches() {
+  const { pitches } = useOnboarding();
   return (
     <section id="pitches" style={{ background: '#0D1B2A', padding: '96px 24px' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -602,8 +604,8 @@ function FeaturedPitches() {
 
         {/* Cards grid */}
         <div className="pitch-grid">
-          {FEATURED_PITCHES.map((p, i) => (
-            <PitchCardUI key={p.id} pitch={p} featured={i === 0} />
+          {pitches.map((p, i) => (
+            <PitchCardUI key={p.id} pitch={p} featured={i === 0} pitches={pitches} />
           ))}
         </div>
       </div>
@@ -619,9 +621,9 @@ const PITCH_GRADIENTS = [
   'linear-gradient(145deg, #1b3a1b, #0d2a0d)',
 ];
 
-function PitchCardUI({ pitch, featured }) {
+function PitchCardUI({ pitch, featured, pitches }) {
   const [hovered, setHovered] = useState(false);
-  const idx = FEATURED_PITCHES.indexOf(pitch);
+  const idx = pitches ? pitches.indexOf(pitch) : 0;
 
   return (
     <div

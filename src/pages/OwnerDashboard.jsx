@@ -172,7 +172,7 @@ export default function OwnerDashboard() {
                       <DollarSign size={18} style={{ color: '#52B788' }} />
                       <span style={{ fontSize: 12, color: 'rgba(245,245,240,0.7)', fontWeight: 600 }}>Accepted revenue</span>
                     </div>
-                    <div style={{ fontSize: 34, fontWeight: 700, color: '#F5F5F0' }}>₦{revenue.toLocaleString()}</div>
+                    <div style={{ fontSize: 34, fontWeight: 700, color: '#F5F5F0', fontFamily: '"JetBrains Mono", monospace' }}>₦{revenue.toLocaleString()}</div>
                   </div>
                 </section>
 
@@ -394,7 +394,7 @@ export default function OwnerDashboard() {
                             <div style={{ fontSize: 12, color: 'rgba(245,245,240,0.55)' }}>{booking.date} • {booking.time}</div>
                           </div>
                           <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: 14, fontWeight: 700, color: '#F5F5F0' }}>₦{booking.totalPrice.toLocaleString()}</div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: '#F5F5F0', fontFamily: '"JetBrains Mono", monospace' }}>₦{booking.totalPrice.toLocaleString()}</div>
                             <div style={{ fontSize: 12, color: booking.ownerStatus === 'accepted' ? '#52B788' : '#E63946' }}>{booking.ownerStatus}</div>
                           </div>
                         </div>
@@ -414,7 +414,7 @@ export default function OwnerDashboard() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div style={{ background: '#11212f', border: '1px solid rgba(82,183,136,0.18)', borderRadius: 22, padding: 24 }}>
                     <span style={{ display: 'block', fontSize: 12, color: 'rgba(245,245,240,0.7)', marginBottom: 10 }}>Confirmed earnings</span>
-                    <div style={{ fontSize: 36, fontWeight: 700, color: '#F5F5F0' }}>₦{revenue.toLocaleString()}</div>
+                    <div style={{ fontSize: 36, fontWeight: 700, color: '#F5F5F0', fontFamily: '"JetBrains Mono", monospace' }}>₦{revenue.toLocaleString()}</div>
                   </div>
                   <div style={{ background: '#11212f', border: '1px solid rgba(82,183,136,0.18)', borderRadius: 22, padding: 24 }}>
                     <span style={{ display: 'block', fontSize: 12, color: 'rgba(245,245,240,0.7)', marginBottom: 10 }}>Open requests</span>
@@ -440,7 +440,7 @@ export default function OwnerDashboard() {
                             <div style={{ fontSize: 12, color: 'rgba(245,245,240,0.55)' }}>{booking.date} • {booking.time}</div>
                           </div>
                           <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: 14, fontWeight: 700, color: '#F5F5F0' }}>₦{booking.totalPrice.toLocaleString()}</div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: '#F5F5F0', fontFamily: '"JetBrains Mono", monospace' }}>₦{booking.totalPrice.toLocaleString()}</div>
                             <div style={{ fontSize: 12, color: '#52B788' }}>accepted</div>
                           </div>
                         </div>
