@@ -9,6 +9,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import PlayerDashboard from './pages/PlayerDashboard';
 import OwnerDashboard from './pages/OwnerDashboard';
 import DetailsPlaceholder from './pages/DetailsPlaceholder';
+import PitchDetail from './pages/PitchDetail';
 import { OnboardingProvider } from './context/OnboardingContext';
 import './index.css';
 
@@ -26,7 +27,7 @@ export default function App() {
           <Route path="/dashboard" element={<PlayerDashboard />} />
           <Route path="/owner-dashboard" element={<OwnerDashboard />} />
           
-          <Route path="/pitch/:id" element={<DetailsPlaceholder />} />
+          <Route path="/pitch/:id" element={<PitchDetail />} />
           <Route path="/match/:id" element={<DetailsPlaceholder />} />
           <Route path="/tournament/:id" element={<DetailsPlaceholder />} />
 

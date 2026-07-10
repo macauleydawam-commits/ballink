@@ -3,7 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useOnboarding } from '../context/OnboardingContext';
 import {
   Home, Users, MessageSquare, User, Search, MapPin, Star,
-  Clock, LogOut, ChevronRight, Filter, AlertCircle, Plus, Send
+  Clock, LogOut, ChevronRight, Filter, AlertCircle, Plus, Send,
+  Calendar, Trash2, Edit3, X, CheckCircle
 } from 'lucide-react';
 import {
   NEARBY_PITCHES,
@@ -15,7 +16,6 @@ import {
   LIVE_MATCHES
 } from '../data/mockData';
 
-// --- Starting XI positions on the SVG pitch representation ---
 const FORMATION_POSITIONS = [
   { id: 'gk', label: 'GK', name: 'Goalkeeper', cx: 200, cy: 340 },
   { id: 'ldf', label: 'LDF', name: 'Left Defender', cx: 80, cy: 260 },
@@ -32,14 +32,21 @@ const FORMATION_POSITIONS = [
 
 export default function PlayerDashboard() {
   const navigate = useNavigate();
-  const { userProfile, resetProfile } = useOnboarding();
+  const {
+    userProfile,
+    resetProfile,
+    bookings,
+    updateBooking,
+    cancelBooking
+  } = useOnboarding();
+
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'matches', 'team', 'chat', 'profile'
 
   // Search & Filter state
   const [searchArea, setSearchArea] = useState('');
   const [searchTime, setSearchTime] = useState('');
 
-  // Starting XI squad state (filled by user actions)
+  // Starting XI squad state
   const [squad, setSquad] = useState({
     gk: userProfile.position === 'Goalkeeper' ? userProfile.name : 'Tap to assign',
     ldf: 'Tap to assign',
@@ -54,20 +61,53 @@ export default function PlayerDashboard() {
     rfw: 'Tap to assign',
   });
 
-  const [selectedSlot, setSelectedSlot] = useState(null);
+  // Edit booking modal state
+  const [showEditBookingModal, setShowEditBookingModal] = useState(false);
+  const [editingBooking, setEditingBooking] = useState(null);
+  const [editDate, setEditDate] = useState('');
+  const [editTime, setEditTime] = useState('');
+  const [editDuration, setEditDuration] = useState(1);
 
   const assignPlayer = (posId) => {
-    setSelectedSlot(posId);
     const pName = prompt("Enter player's name to assign to this position:");
     if (pName && pName.trim()) {
       setSquad(prev => ({ ...prev, [posId]: pName.trim() }));
     }
-    setSelectedSlot(null);
   };
 
   const handleLogout = () => {
     resetProfile();
     navigate('/');
+  };
+
+  const handleStartEditBooking = (booking) => {
+    setEditingBooking(booking);
+    setEditDate(booking.date);
+    setEditTime(booking.time);
+    setEditDuration(booking.duration);
+    setShowEditBookingModal(true);
+  };
+
+  const handleSaveEditedBooking = (e) => {
+    e.preventDefault();
+    // Calculate new price based on duration change (assuming base hourly rate is static to booking data)
+    const baseHourRate = editingBooking.totalPrice / editingBooking.duration;
+    const newPrice = baseHourRate * editDuration;
+
+    updateBooking(editingBooking.id, {
+      date: editDate,
+      time: editTime,
+      duration: editDuration,
+      totalPrice: newPrice,
+    });
+    setShowEditBookingModal(false);
+    setEditingBooking(null);
+  };
+
+  const handleCancelBooking = (bookingId) => {
+    if (window.confirm("Are you sure you want to cancel this booking?")) {
+      cancelBooking(bookingId);
+    }
   };
 
   // Filtered lists based on search
@@ -177,7 +217,7 @@ export default function PlayerDashboard() {
                 {filterPitches(NEARBY_PITCHES).map(pitch => (
                   <Link key={pitch.id} to={`/pitch/${pitch.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block', flexShrink: 0, width: 280 }}>
                     <div style={{ background: '#111c2a', borderRadius: 18, border: '1px solid rgba(82,183,136,0.1)', overflow: 'hidden' }}>
-                      <div style={{ height: 120, background: `gradient-to-br ${pitch.imageGradient || 'from-pitch-green to-night-navy'}`, background: '#1B4332', position: 'relative' }}>
+                      <div style={{ height: 120, background: '#1B4332', position: 'relative' }}>
                         <div style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(82,183,136,0.2)', border: '1px solid rgba(82,183,136,0.4)', borderRadius: 100, padding: '3px 8px', fontSize: 10, color: '#52B788', fontWeight: 600 }}>AVAILABLE</div>
                       </div>
                       <div style={{ padding: 14 }}>
@@ -374,7 +414,7 @@ export default function PlayerDashboard() {
           </div>
         )}
 
-        {/* TEAM SIGNATURE VIEW (Starting XI Formation Pitch) */}
+        {/* TEAM SIGNATURE VIEW */}
         {activeTab === 'team' && (
           <div>
             <div style={{ textAlign: 'center', marginBottom: 24 }}>
@@ -386,39 +426,31 @@ export default function PlayerDashboard() {
               </p>
             </div>
 
-            {/* Interactive Pitch container */}
+            {/* Interactive Pitch */}
             <div style={{
               maxWidth: 420, margin: '0 auto', background: 'linear-gradient(to bottom, #1e5038, #143628)',
               border: '2px solid rgba(82,183,136,0.3)', borderRadius: 28, overflow: 'hidden',
               boxShadow: '0 24px 60px rgba(0,0,0,0.5)', position: 'relative'
             }}>
-              {/* Pitch layout dimensions */}
               <div style={{ padding: '24px 16px' }}>
                 <svg viewBox="0 0 400 400" width="100%" style={{ display: 'block', pointerEvents: 'auto' }}>
-                  {/* Pitch outlines */}
                   <rect x="10" y="10" width="380" height="380" fill="none" stroke="white" strokeWidth="2.5" opacity="0.4" />
                   <line x1="10" y1="200" x2="390" y2="200" stroke="white" strokeWidth="2" opacity="0.4" />
                   <circle cx="200" cy="200" r="50" fill="none" stroke="white" strokeWidth="2" opacity="0.4" />
                   <circle cx="200" cy="200" r="4" fill="white" opacity="0.6" />
-                  {/* Goal boxes */}
                   <rect x="110" y="10" width="180" height="50" fill="none" stroke="white" strokeWidth="1.5" opacity="0.3" />
                   <rect x="110" y="340" width="180" height="50" fill="none" stroke="white" strokeWidth="1.5" opacity="0.3" />
 
-                  {/* Interactive Position Markers */}
                   {FORMATION_POSITIONS.map(pos => {
                     const assignedName = squad[pos.id];
                     const isAssigned = assignedName !== 'Tap to assign';
                     return (
                       <g key={pos.id} onClick={() => assignPlayer(pos.id)} style={{ cursor: 'pointer' }}>
-                        {/* Glow halo */}
                         <circle cx={pos.cx} cy={pos.cy} r="18" fill={isAssigned ? 'rgba(244,163,0,0.15)' : 'rgba(255,255,255,0.05)'} />
-                        {/* Dot */}
                         <circle cx={pos.cx} cy={pos.cy} r="13" fill={isAssigned ? '#F4A300' : '#111c2a'} stroke={isAssigned ? '#FFD166' : 'rgba(82,183,136,0.5)'} strokeWidth="1.5" />
-                        {/* Short position label */}
                         <text x={pos.cx} y={pos.cy + 4} textAnchor="middle" fill={isAssigned ? '#0D1B2A' : '#52B788'} fontSize="9" fontWeight="700" fontFamily="Inter">{pos.label}</text>
-                        {/* Name label beneath dot */}
                         <rect x={pos.cx - 45} y={pos.cy + 18} width="90" height="15" rx="4" fill="rgba(13,27,42,0.85)" stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" />
-                        <text x={pos.cx} y={pos.cy + 29} textAnchor="middle" fill="#F5F5F0" fontSize="8" fontWeight="500" fontFamily="Inter" clipPath="ellipse(45px, 15px)">
+                        <text x={pos.cx} y={pos.cy + 29} textAnchor="middle" fill="#F5F5F0" fontSize="8" fontWeight="500" fontFamily="Inter">
                           {assignedName.length > 15 ? assignedName.substring(0, 13) + '..' : assignedName}
                         </text>
                       </g>
@@ -462,63 +494,207 @@ export default function PlayerDashboard() {
           </div>
         )}
 
-        {/* PROFILE TAB VIEW */}
+        {/* PROFILE TAB VIEW (INCORPORATES MY BOOKINGS LIST) */}
         {activeTab === 'profile' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 500, margin: '0 auto' }}>
-            <div style={{
-              background: 'linear-gradient(145deg, #1B4332 0%, #0f2a1f 100%)',
-              border: '1px solid rgba(82,183,136,0.25)', borderRadius: 24, padding: 28,
-              boxShadow: '0 20px 40px rgba(0,0,0,0.4)', textAlign: 'center'
-            }}>
-              <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '2px solid rgba(244,163,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <User size={40} style={{ color: '#F4A300' }} />
-              </div>
-              <h3 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 32, letterSpacing: 1, color: '#F5F5F0', margin: '0 0 6px' }}>
-                {userProfile.name || 'Anonymous Player'}
-              </h3>
-              <div style={{ fontSize: 13, color: 'rgba(245,245,240,0.5)', display: 'flex', justify: 'center', alignItems: 'center', gap: 4, marginBottom: 24 }}>
-                <MapPin size={12} style={{ color: '#52B788' }} /> {userProfile.location || 'Jos, Plateau State'}
-              </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: 24 }} className="profile-layout">
+            
+            {/* Left: Player Card */}
+            <div>
+              <div style={{
+                background: 'linear-gradient(145deg, #1B4332 0%, #0f2a1f 100%)',
+                border: '1px solid rgba(82,183,136,0.25)', borderRadius: 24, padding: 28,
+                boxShadow: '0 20px 40px rgba(0,0,0,0.4)', textAlign: 'center'
+              }}>
+                <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '2px solid rgba(244,163,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                  <User size={40} style={{ color: '#F4A300' }} />
+                </div>
+                <h3 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 32, letterSpacing: 1, color: '#F5F5F0', margin: '0 0 6px' }}>
+                  {userProfile.name || 'Anonymous Player'}
+                </h3>
+                <div style={{ fontSize: 13, color: 'rgba(245,245,240,0.5)', display: 'flex', justify: 'center', alignItems: 'center', gap: 4, marginBottom: 24 }}>
+                  <MapPin size={12} style={{ color: '#52B788' }} /> {userProfile.location || 'Jos, Plateau State'}
+                </div>
 
-              {/* Profile Details Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, textAlign: 'left', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 20 }}>
-                <div style={{ background: 'rgba(0,0,0,0.15)', padding: 12, borderRadius: 12 }}>
-                  <div style={{ fontSize: 11, color: 'rgba(245,245,240,0.4)', marginBottom: 2 }}>POSITION</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#F4A300' }}>{userProfile.position || 'Forward'}</div>
-                </div>
-                <div style={{ background: 'rgba(0,0,0,0.15)', padding: 12, borderRadius: 12 }}>
-                  <div style={{ fontSize: 11, color: 'rgba(245,245,240,0.4)', marginBottom: 2 }}>EXPERTISE</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#52B788' }}>{userProfile.skillLevel || 'Intermediate'}</div>
-                </div>
-                <div style={{ background: 'rgba(0,0,0,0.15)', padding: 12, borderRadius: 12 }}>
-                  <div style={{ fontSize: 11, color: 'rgba(245,245,240,0.4)', marginBottom: 2 }}>SEX</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#F5F5F0' }}>{userProfile.sex || 'Not specified'}</div>
-                </div>
-                <div style={{ background: 'rgba(0,0,0,0.15)', padding: 12, borderRadius: 12 }}>
-                  <div style={{ fontSize: 11, color: 'rgba(245,245,240,0.4)', marginBottom: 2 }}>RATING</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#F4A300', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Star size={12} fill="#F4A300" style={{ color: '#F4A300' }} /> 5.0
+                {/* Profile Specs */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, textAlign: 'left', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 20 }}>
+                  <div style={{ display: 'flex', justify: 'space-between', fontSize: 13 }}>
+                    <span style={{ color: 'rgba(245,245,240,0.4)' }}>POSITION</span>
+                    <span style={{ fontWeight: 600, color: '#F4A300' }}>{userProfile.position || 'Forward'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justify: 'space-between', fontSize: 13 }}>
+                    <span style={{ color: 'rgba(245,245,240,0.4)' }}>EXPERTISE</span>
+                    <span style={{ fontWeight: 600, color: '#52B788' }}>{userProfile.skillLevel || 'Intermediate'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justify: 'space-between', fontSize: 13 }}>
+                    <span style={{ color: 'rgba(245,245,240,0.4)' }}>SEX</span>
+                    <span style={{ fontWeight: 600 }}>{userProfile.sex || 'Not Specified'}</span>
                   </div>
                 </div>
-              </div>
 
-              {/* Log out option */}
-              <button
-                onClick={handleLogout}
-                style={{
-                  width: '100%', padding: '14px', borderRadius: 12, background: 'rgba(230,57,70,0.1)',
-                  border: '1px solid rgba(230,57,70,0.25)', color: '#E63946',
-                  fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 700,
-                  cursor: 'pointer', marginTop: 24,
-                }}
-              >
-                Log Out Profile
-              </button>
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(230,57,70,0.1)',
+                    border: '1px solid rgba(230,57,70,0.25)', color: '#E63946',
+                    fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 700,
+                    cursor: 'pointer', marginTop: 24,
+                  }}
+                >
+                  Log Out Profile
+                </button>
+              </div>
             </div>
+
+            {/* Right: My Bookings Screen */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 24, padding: 24 }}>
+                <h3 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 24, letterSpacing: 1, color: '#F5F5F0', marginBottom: 16 }}>
+                  My Bookings
+                </h3>
+
+                {bookings.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px 0', color: 'rgba(245,245,240,0.4)' }}>
+                    <Calendar size={32} style={{ marginBottom: 12, opacity: 0.5 }} />
+                    <p style={{ fontSize: 14 }}>No bookings listed. Go to the Home tab to reserve a slot!</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {bookings.map(b => (
+                      <div key={b.id} style={{
+                        padding: 16, background: '#111c2a', borderRadius: 16,
+                        border: b.status === 'upcoming' ? '1px solid rgba(82,183,136,0.2)' : '1px solid rgba(255,255,255,0.04)',
+                        display: 'flex', justify: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14
+                      }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                            <span style={{
+                              padding: '2px 8px', borderRadius: 6, fontSize: 9, fontWeight: 700,
+                              background: b.status === 'upcoming' ? 'rgba(82,183,136,0.15)' : 'rgba(255,255,255,0.05)',
+                              color: b.status === 'upcoming' ? '#52B788' : 'rgba(245,245,240,0.4)'
+                            }}>
+                              {b.status === 'upcoming' ? 'UPCOMING' : 'COMPLETED'}
+                            </span>
+                            <span style={{ fontSize: 14, fontWeight: 600, color: '#F5F5F0' }}>{b.pitchName}</span>
+                          </div>
+                          <div style={{ fontSize: 12, color: 'rgba(245,245,240,0.4)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <span>Date: {b.date}</span>
+                            <span>Time: {b.time} ({b.duration} hr)</span>
+                            <span style={{ color: '#F4A300', fontFamily: '"JetBrains Mono", monospace' }}>₦{b.totalPrice.toLocaleString()}</span>
+                          </div>
+                        </div>
+
+                        {/* Actions for upcoming bookings */}
+                        {b.status === 'upcoming' && (
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button
+                              onClick={() => handleStartEditBooking(b)}
+                              style={{
+                                width: 32, height: 32, borderRadius: 8, background: 'rgba(244,163,0,0.1)',
+                                border: '1px solid rgba(244,163,0,0.2)', color: '#F4A300',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                              }}
+                              title="Edit Booking"
+                            >
+                              <Edit3 size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleCancelBooking(b.id)}
+                              style={{
+                                width: 32, height: 32, borderRadius: 8, background: 'rgba(230,57,70,0.1)',
+                                border: '1px solid rgba(230,57,70,0.2)', color: '#E63946',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                              }}
+                              title="Cancel Booking"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+              </div>
+            </div>
+
           </div>
         )}
 
       </main>
+
+      {/* --- EDIT BOOKING MODAL --- */}
+      {showEditBookingModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div onClick={() => { setShowEditBookingModal(false); setEditingBooking(null); }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }} />
+          <div style={{
+            position: 'relative', zIndex: 1, width: '100%', maxWidth: 400,
+            background: '#111c2a', border: '1px solid rgba(82,183,136,0.3)',
+            borderRadius: 24, padding: 28, boxShadow: '0 30px 70px rgba(0,0,0,0.6)'
+          }}>
+            <button onClick={() => { setShowEditBookingModal(false); setEditingBooking(null); }} style={{ position: 'absolute', right: 18, top: 18, background: 'none', border: 'none', color: 'rgba(245,245,240,0.4)', cursor: 'pointer' }}><X size={20} /></button>
+            <h2 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 24, color: '#F5F5F0', margin: '0 0 6px', letterSpacing: 1 }}>RESCHEDULE BOOKING</h2>
+            <p style={{ fontSize: 12, color: 'rgba(245,245,240,0.4)', marginBottom: 20 }}>Adjust slots for <strong>{editingBooking?.pitchName}</strong>.</p>
+
+            <form onSubmit={handleSaveEditedBooking} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(245,245,240,0.7)' }}>Select Date</label>
+                <input
+                  type="date"
+                  value={editDate}
+                  onChange={e => setEditDate(e.target.value)}
+                  style={{ width: '100%', padding: 12, background: '#0D1B2A', border: '1px solid rgba(82,183,136,0.2)', borderRadius: 10, color: '#F5F5F0', outline: 'none' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(245,245,240,0.7)' }}>Start Time</label>
+                <select
+                  value={editTime}
+                  onChange={e => setEditTime(e.target.value)}
+                  style={{ width: '100%', padding: 12, background: '#0D1B2A', border: '1px solid rgba(82,183,136,0.2)', borderRadius: 10, color: '#F5F5F0', outline: 'none' }}
+                >
+                  {['15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'].map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'rgba(245,245,240,0.7)' }}>Duration (Hours)</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#0D1B2A', padding: '6px 12px', border: '1px solid rgba(82,183,136,0.2)', borderRadius: 10 }}>
+                  <button
+                    type="button"
+                    onClick={() => setEditDuration(prev => Math.max(1, prev - 1))}
+                    style={{ border: 'none', background: 'rgba(255,255,255,0.05)', width: 28, height: 28, borderRadius: 6, color: '#F5F5F0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Minus size={14} />
+                  </button>
+                  <span style={{ flex: 1, textAlign: 'center', fontFamily: '"JetBrains Mono", monospace', fontSize: 14, fontWeight: 700 }}>{editDuration} hr</span>
+                  <button
+                    type="button"
+                    onClick={() => setEditDuration(prev => Math.min(8, prev + 1))}
+                    style={{ border: 'none', background: 'rgba(255,255,255,0.05)', width: 28, height: 28, borderRadius: 6, color: '#F5F5F0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                style={{
+                  width: '100%', padding: '14px', borderRadius: 12, background: 'linear-gradient(135deg, #F4A300, #FFB800)',
+                  border: 'none', fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 700,
+                  color: '#0D1B2A', cursor: 'pointer', marginTop: 6,
+                }}
+              >
+                Confirm Reschedule
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Persistent Bottom Navigation Tab Bar */}
       <footer style={{
@@ -553,6 +729,13 @@ export default function PlayerDashboard() {
           );
         })}
       </footer>
+
+      <style>{`
+        .profile-layout { display: grid; grid-template-columns: 1.2fr 1.8fr; gap: 24px; }
+        @media(max-width: 768px) {
+          .profile-layout { grid-template-columns: 1fr; }
+        }
+      `}</style>
     </div>
   );
 }
