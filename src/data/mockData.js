@@ -1,0 +1,137 @@
+// BallLink mock data — Stage 1
+// Structured for easy swap to live API calls.
+// Every list is a plain array of objects; swap fetch/useState calls in consuming components.
+
+export const FEATURED_PITCHES = [
+  {
+    id: 'pitch-001',
+    name: 'Terminus Turf Arena',
+    location: 'Terminus Road, Jos',
+    surface: '5-a-side • Artificial Turf',
+    pricePerHour: 8500,
+    rating: 4.8,
+    reviewCount: 124,
+    available: true,
+    tags: ['Floodlit', 'Changing Rooms', 'Water'],
+    imageGradient: 'from-pitch-green via-[#0f3326] to-night-navy',
+    accentColor: '#52B788',
+  },
+  {
+    id: 'pitch-002',
+    name: 'Rock City Football Centre',
+    location: 'Rayfield, Jos South',
+    surface: '7-a-side • Hybrid Grass',
+    pricePerHour: 12000,
+    rating: 4.6,
+    reviewCount: 87,
+    available: true,
+    tags: ['Floodlit', 'Parking', 'Café'],
+    imageGradient: 'from-[#1a3a5c] via-[#0f2540] to-night-navy',
+    accentColor: '#F4A300',
+  },
+  {
+    id: 'pitch-003',
+    name: 'Plateau Palace Ground',
+    location: 'Anglo-Jos, Plateau State',
+    surface: '11-a-side • Natural Grass',
+    pricePerHour: 20000,
+    rating: 4.9,
+    reviewCount: 203,
+    available: false,
+    tags: ['Premium', 'Grandstand', 'Changing Rooms'],
+    imageGradient: 'from-[#2d1b4e] via-[#1a0f30] to-night-navy',
+    accentColor: '#E63946',
+  },
+  {
+    id: 'pitch-004',
+    name: 'Naraguta Mini Pitch',
+    location: 'Naraguta, Jos North',
+    surface: '5-a-side • Artificial Turf',
+    pricePerHour: 6000,
+    rating: 4.3,
+    reviewCount: 56,
+    available: true,
+    tags: ['Affordable', 'Floodlit'],
+    imageGradient: 'from-[#1b4332] via-[#0d2a1e] to-night-navy',
+    accentColor: '#52B788',
+  },
+];
+
+export const LIVE_MATCHES = [
+  {
+    id: 'match-001',
+    name: 'Evening Run — 5-a-side',
+    pitchName: 'Terminus Turf Arena',
+    time: '18:00',
+    date: 'Today',
+    spotsTotal: 10,
+    spotsTaken: 8,
+    skillLevel: 'Mixed',
+    fee: 1500,
+    isLive: true,
+    organiser: 'Chukwuemeka A.',
+  },
+  {
+    id: 'match-002',
+    name: 'Friday Night Ballers',
+    pitchName: 'Rock City Football Centre',
+    time: '20:00',
+    date: 'Today',
+    spotsTotal: 14,
+    spotsTaken: 10,
+    skillLevel: 'Intermediate',
+    fee: 2000,
+    isLive: true,
+    organiser: 'Daniel M.',
+  },
+  {
+    id: 'match-003',
+    name: 'Saturday Morning League',
+    pitchName: 'Naraguta Mini Pitch',
+    time: '08:00',
+    date: 'Tomorrow',
+    spotsTotal: 10,
+    spotsTaken: 4,
+    skillLevel: 'Beginner Friendly',
+    fee: 1000,
+    isLive: false,
+    organiser: 'Abubakar S.',
+  },
+  {
+    id: 'match-004',
+    name: 'Weekend Warriors 7v7',
+    pitchName: 'Plateau Palace Ground',
+    time: '16:00',
+    date: 'Tomorrow',
+    spotsTotal: 14,
+    spotsTaken: 14,
+    skillLevel: 'Competitive',
+    fee: 2500,
+    isLive: false,
+    organiser: 'Emmanuel T.',
+  },
+];
+
+export const HOW_IT_WORKS = [
+  {
+    step: '01',
+    icon: 'MapPin',
+    title: 'Find a Pitch or Match',
+    description:
+      'Browse available turf and grass pitches near you in Jos, or discover open matches looking for players right now.',
+  },
+  {
+    step: '02',
+    icon: 'UserPlus',
+    title: 'Join or Book',
+    description:
+      'Grab a spot in an open match in one tap, or book a full pitch slot for your team. Pay securely via Paystack.',
+  },
+  {
+    step: '03',
+    icon: 'Zap',
+    title: 'Show Up and Play',
+    description:
+      'Get your confirmation, show up at kick-off time, and play. Rate the pitch after to help the community.',
+  },
+];
