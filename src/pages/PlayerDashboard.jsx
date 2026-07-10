@@ -4,7 +4,7 @@ import { useOnboarding } from '../context/OnboardingContext';
 import {
   Home, Users, MessageSquare, User, Search, MapPin, Star,
   Clock, LogOut, ChevronRight, Filter, AlertCircle, Plus, Send,
-  Calendar, Trash2, Edit3, X, CheckCircle
+  Calendar, Trash2, Edit3, X, CheckCircle, Trophy, Minus
 } from 'lucide-react';
 import {
   NEARBY_PITCHES,
@@ -704,7 +704,7 @@ export default function PlayerDashboard() {
       }}>
         {[
           { id: 'home', label: 'Home', icon: Home },
-          { id: 'matches', label: 'Matches', icon: Search },
+          { id: 'matches', label: 'Matches', icon: Trophy },
           { id: 'team', label: 'Team', icon: Users },
           { id: 'chat', label: 'Chat', icon: MessageSquare },
           { id: 'profile', label: 'Profile', icon: User },
