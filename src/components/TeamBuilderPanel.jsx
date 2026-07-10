@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOnboarding } from '../context/OnboardingContext';
 
@@ -47,6 +47,13 @@ export default function TeamBuilderPanel() {
   const [activeSlot, setActiveSlot] = useState(null);
   const [showNewTeam, setShowNewTeam] = useState(false);
   const [newTeamDraft, setNewTeamDraft] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    const t = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(t);
+  }, []);
 
   const currentFormation = FORMATIONS[teamBuilder.formation] || FORMATIONS['4-3-3'];
   const benchPlayers = teamBuilder.bench;
@@ -238,7 +245,13 @@ export default function TeamBuilderPanel() {
               <div style={{ fontSize: 12, fontWeight: 700, color: '#F4A300' }}>{benchPlayers.length} players</div>
             </div>
             <div style={{ display: 'grid', gap: 12, marginTop: 16 }}>
-              {benchPlayers.map((player) => (
+              {loading ? (
+                <div style={{ height: 60, borderRadius: 16, background: 'rgba(255,255,255,0.05)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+              ) : benchPlayers.length === 0 ? (
+                <div style={{ padding: 14, textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: 16, border: '1px dashed rgba(255,255,255,0.1)', color: 'rgba(245,245,240,0.5)', fontSize: 13 }}>
+                  Your bench is empty. Add players from the available roster below to have them ready.
+                </div>
+              ) : benchPlayers.map((player) => (
                 <div key={player} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)', padding: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <div style={{ fontWeight: 700 }}>{player}</div>
@@ -281,7 +294,13 @@ export default function TeamBuilderPanel() {
           <div style={{ background: '#111c2a', borderRadius: 24, padding: 20, border: '1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(245,245,240,0.5)', marginBottom: 12 }}>Available Players</div>
             <div style={{ display: 'grid', gap: 12 }}>
-              {availableRoster.map((player) => (
+              {loading ? (
+                <div style={{ height: 60, borderRadius: 16, background: 'rgba(255,255,255,0.05)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+              ) : availableRoster.length === 0 ? (
+                <div style={{ padding: 14, textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: 16, border: '1px dashed rgba(255,255,255,0.1)', color: 'rgba(245,245,240,0.5)', fontSize: 13 }}>
+                  No available players at the moment.
+                </div>
+              ) : availableRoster.map((player) => (
                 <div key={player.id} style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 16, padding: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <div style={{ fontWeight: 700 }}>{player.name}</div>
@@ -394,6 +413,14 @@ export default function TeamBuilderPanel() {
           .team-builder-grid {
             grid-template-columns: 1fr;
           }
+        }
+        @media (max-width: 375px) {
+          .team-builder-grid { gap: 16px; }
+          h2 { font-size: 24px !important; }
+        }
+        @keyframes skeletonPulse {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 0.35; }
         }
       `}</style>
     </div>

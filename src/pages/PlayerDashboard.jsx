@@ -736,8 +736,8 @@ export default function PlayerDashboard() {
                     <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(82,183,136,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: 'rgba(245,245,240,0.4)' }}>
                       <Calendar size={28} />
                     </div>
-                    <div style={{ fontSize: 16, fontWeight: 600, color: '#F5F5F0', marginBottom: 8 }}>No bookings yet</div>
-                    <div style={{ fontSize: 13, color: 'rgba(245,245,240,0.6)', marginBottom: 20, maxWidth: 300, margin: '0 auto 20px' }}>Browse available pitches in the Home tab and reserve a slot that works for your team.</div>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: '#F5F5F0', marginBottom: 8 }}>Ready for kick-off?</div>
+                    <div style={{ fontSize: 13, color: 'rgba(245,245,240,0.6)', marginBottom: 20, maxWidth: 300, margin: '0 auto 20px' }}>You haven't booked any matches yet. Browse available pitches and reserve a slot that works for your squad.</div>
                     <button onClick={() => setActiveTab('home')} style={{ padding: '11px 18px', borderRadius: 12, background: 'linear-gradient(135deg, #52B788, #1B4332)', color: '#F5F5F0', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 700 }}>Find pitches</button>
                   </div>
                 ) : (
@@ -920,6 +920,11 @@ export default function PlayerDashboard() {
         .profile-layout { display: grid; grid-template-columns: 1.2fr 1.8fr; gap: 24px; }
         @media(max-width: 768px) {
           .profile-layout { grid-template-columns: 1fr; }
+        }
+        @media(max-width: 375px) {
+          main { padding: 16px 12px; }
+          .profile-layout { gap: 16px; }
+          h2 { font-size: 24px !important; }
         }
         @keyframes skeletonPulse {
           0%, 100% { opacity: 0.6; }

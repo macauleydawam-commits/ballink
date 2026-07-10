@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOnboarding } from '../context/OnboardingContext';
 import { LogOut, Building2, Phone, Calendar, Plus, MapPin, DollarSign, Settings, CheckCircle, X, Edit3, Trophy, ChevronRight } from 'lucide-react';
@@ -18,6 +18,7 @@ export default function OwnerDashboard() {
   } = useOnboarding();
 
   const [activeTab, setActiveTab] = useState('overview');
+  const [loading, setLoading] = useState(false);
   const [editingPitchId, setEditingPitchId] = useState(null);
   const [draft, setDraft] = useState({
     name: 'New 5-a-side Pitch',
@@ -30,6 +31,27 @@ export default function OwnerDashboard() {
     contactNumber: userProfile.contactNumber || '',
   });
   const [editDraft, setEditDraft] = useState(null);
+
+  useEffect(() => {
+    setLoading(true);
+    const t = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(t);
+  }, [activeTab]);
+
+  const renderSkeletons = (count = 3) => (
+    <div style={{ display: 'grid', gap: 16 }}>
+      {Array.from({ length: count }).map((_, idx) => (
+        <div key={idx} style={{ background: '#0f1d29', border: '1px solid rgba(82,183,136,0.12)', borderRadius: 24, padding: 22, height: 120, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ width: '40%', height: 16, borderRadius: 4, background: 'rgba(255,255,255,0.06)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+          <div style={{ width: '80%', height: 12, borderRadius: 4, background: 'rgba(255,255,255,0.04)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+          <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+            <div style={{ width: 60, height: 24, borderRadius: 999, background: 'rgba(255,255,255,0.05)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+            <div style={{ width: 80, height: 24, borderRadius: 999, background: 'rgba(255,255,255,0.05)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   const ownerPitches = useMemo(
     () => pitches.filter((pitch) => pitch.ownerId === currentOwnerId),
@@ -187,9 +209,11 @@ export default function OwnerDashboard() {
                     </button>
                   </div>
 
-                  {ownerPitches.length === 0 ? (
-                    <div style={{ background: '#0f1d29', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 22, padding: 24, textAlign: 'center' }}>
-                      <p style={{ margin: 0, color: 'rgba(245,245,240,0.6)' }}>You do not have any published pitches yet. Create one using the Register Pitch tab.</p>
+                  {loading ? renderSkeletons(2) : ownerPitches.length === 0 ? (
+                    <div style={{ background: '#0f1d29', border: '1px dashed rgba(255,255,255,0.15)', borderRadius: 22, padding: 32, textAlign: 'center' }}>
+                      <p style={{ margin: '0 0 16px', color: '#F5F5F0', fontSize: 16, fontWeight: 600 }}>Your pitch portfolio is empty</p>
+                      <p style={{ margin: '0 0 20px', color: 'rgba(245,245,240,0.6)', fontSize: 13, maxWidth: 320, marginInline: 'auto' }}>Create your first listing to start accepting bookings and building your community presence.</p>
+                      <button onClick={() => setActiveTab('register')} style={{ padding: '10px 20px', borderRadius: 12, background: 'linear-gradient(135deg, #52B788, #1B4332)', color: '#F5F5F0', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 700 }}>Register Pitch</button>
                     </div>
                   ) : (
                     <div style={{ display: 'grid', gap: 18 }}>
@@ -360,9 +384,10 @@ export default function OwnerDashboard() {
                 </div>
 
                 <div style={{ display: 'grid', gap: 16 }}>
-                  {incomingBookings.length === 0 ? (
-                    <div style={{ background: '#0f1d29', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24, padding: 24, color: 'rgba(245,245,240,0.7)' }}>
-                      No new booking requests yet.
+                  {loading ? renderSkeletons(2) : incomingBookings.length === 0 ? (
+                    <div style={{ background: '#0f1d29', border: '1px dashed rgba(255,255,255,0.15)', borderRadius: 24, padding: 32, textAlign: 'center', color: 'rgba(245,245,240,0.7)' }}>
+                      <p style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 600, color: '#F5F5F0' }}>You're all caught up!</p>
+                      <p style={{ margin: 0, fontSize: 13, color: 'rgba(245,245,240,0.55)' }}>No pending booking requests at the moment.</p>
                     </div>
                   ) : incomingBookings.map((booking) => (
                     <div key={booking.id} style={{ background: '#0f1d29', border: '1px solid rgba(82,183,136,0.14)', borderRadius: 24, padding: 22, display: 'grid', gap: 14 }}>
@@ -383,8 +408,11 @@ export default function OwnerDashboard() {
 
                 <div style={{ background: '#0f1d29', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24, padding: 24 }}>
                   <h3 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 20, margin: '0 0 12px' }}>Booking history</h3>
-                  {bookingHistory.length === 0 ? (
-                    <p style={{ margin: 0, fontSize: 13, color: 'rgba(245,245,240,0.6)' }}>You haven’t processed any bookings yet.</p>
+                  {loading ? renderSkeletons(2) : bookingHistory.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '24px' }}>
+                      <p style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: '#F5F5F0' }}>History is empty</p>
+                      <p style={{ margin: 0, fontSize: 13, color: 'rgba(245,245,240,0.5)' }}>Once you approve or decline a request, it will appear here.</p>
+                    </div>
                   ) : (
                     <div style={{ display: 'grid', gap: 14 }}>
                       {bookingHistory.map((booking) => (
@@ -429,8 +457,10 @@ export default function OwnerDashboard() {
                     </div>
                     <ChevronRight size={18} style={{ color: 'rgba(245,245,240,0.45)' }} />
                   </div>
-                  {ownerBookings.filter((booking) => booking.ownerStatus === 'accepted').length === 0 ? (
-                    <p style={{ margin: 0, fontSize: 13, color: 'rgba(245,245,240,0.6)' }}>No confirmed bookings yet.</p>
+                  {loading ? renderSkeletons(2) : ownerBookings.filter((booking) => booking.ownerStatus === 'accepted').length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '20px' }}>
+                      <p style={{ margin: 0, fontSize: 13, color: 'rgba(245,245,240,0.6)' }}>Your accepted bookings will appear here.</p>
+                    </div>
                   ) : (
                     <div style={{ display: 'grid', gap: 14 }}>
                       {ownerBookings.filter((booking) => booking.ownerStatus === 'accepted').map((booking) => (
@@ -495,6 +525,15 @@ export default function OwnerDashboard() {
             .owner-dashboard-grid {
               grid-template-columns: 1fr;
             }
+          }
+          @media (max-width: 375px) {
+            main { padding: 16px 12px; }
+            .owner-dashboard-grid { gap: 16px; }
+            h2 { font-size: 24px !important; }
+          }
+          @keyframes skeletonPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 0.35; }
           }
         `}</style>
       </main>

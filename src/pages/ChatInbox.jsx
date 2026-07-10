@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useOnboarding } from '../context/OnboardingContext';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
@@ -6,6 +6,27 @@ import { ArrowLeft, MessageSquare } from 'lucide-react';
 export default function ChatInbox() {
   const navigate = useNavigate();
   const { chats, markChatRead } = useOnboarding();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    const t = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(t);
+  }, []);
+
+  const renderSkeletons = () => (
+    <div style={{ display: 'grid', gap: 14 }}>
+      {[1, 2, 3].map(idx => (
+        <div key={idx} style={{ background: '#111c2a', borderRadius: 18, border: '1px solid rgba(255,255,255,0.06)', padding: 18, display: 'flex', gap: 14, alignItems: 'center' }}>
+          <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ width: '30%', height: 16, borderRadius: 4, background: 'rgba(255,255,255,0.05)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+            <div style={{ width: '60%', height: 12, borderRadius: 4, background: 'rgba(255,255,255,0.03)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div style={{ minHeight: '100vh', background: '#0D1B2A', color: '#F5F5F0', fontFamily: 'Inter, sans-serif', paddingBottom: 90 }}>
@@ -34,14 +55,14 @@ export default function ChatInbox() {
         </div>
 
         <div style={{ display: 'grid', gap: 14 }}>
-          {chats.length === 0 ? (
+          {loading ? renderSkeletons() : chats.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '80px 24px', background: '#111c2a', borderRadius: 20, border: '1px solid rgba(255,255,255,0.05)' }}>
               <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(82,183,136,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: 'rgba(245,245,240,0.35)' }}>
                 <MessageSquare size={32} />
               </div>
               <div style={{ fontSize: 18, fontWeight: 700, color: '#F5F5F0', marginBottom: 10, fontFamily: '"Bebas Neue", sans-serif', letterSpacing: 0.5 }}>Message Center</div>
-              <div style={{ fontSize: 14, color: 'rgba(245,245,240,0.6)', marginBottom: 8, maxWidth: 320, margin: '0 auto 8px' }}>Connect with teammates and pitch organizers here.</div>
-              <div style={{ fontSize: 12, color: 'rgba(245,245,240,0.45)' }}>Conversations start from your team builder or when you interact with a pitch.</div>
+              <div style={{ fontSize: 14, color: 'rgba(245,245,240,0.6)', marginBottom: 8, maxWidth: 320, margin: '0 auto 8px' }}>Your inbox is currently empty.</div>
+              <div style={{ fontSize: 12, color: 'rgba(245,245,240,0.45)' }}>Start building a team or book a pitch to kickstart a conversation!</div>
             </div>
           ) : chats.map((chat) => (
             <div
@@ -81,6 +102,15 @@ export default function ChatInbox() {
           ))}
         </div>
       </main>
+      <style>{`
+        @media(max-width: 375px) {
+          main { padding: 16px 12px 80px !important; }
+        }
+        @keyframes skeletonPulse {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 0.35; }
+        }
+      `}</style>
     </div>
   );
 }

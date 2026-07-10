@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useOnboarding } from '../context/OnboardingContext';
 import {
@@ -35,6 +35,28 @@ export default function PitchDetail() {
   const [editLocation, setEditLocation] = useState(pitch.location);
   const [editPrice, setEditPrice] = useState(pitch.pricePerHour);
   const [editSurface, setEditSurface] = useState(pitch.surface);
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    const t = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(t);
+  }, [id]);
+
+  const renderSkeleton = () => (
+    <div style={{ maxWidth: 860, margin: '0 auto', padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div style={{ height: 260, borderRadius: 20, background: 'rgba(255,255,255,0.05)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+      <div className="detail-layout">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div style={{ width: '60%', height: 48, borderRadius: 8, background: 'rgba(255,255,255,0.05)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+          <div style={{ width: '40%', height: 20, borderRadius: 4, background: 'rgba(255,255,255,0.05)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+          <div style={{ height: 160, borderRadius: 16, background: 'rgba(255,255,255,0.05)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+        </div>
+        <div style={{ height: 300, borderRadius: 20, background: 'rgba(255,255,255,0.05)', animation: 'skeletonPulse 1.5s infinite ease-in-out' }} />
+      </div>
+    </div>
+  );
 
   const calculateTotal = () => {
     return pitch.pricePerHour * bookingDuration;
@@ -103,6 +125,7 @@ export default function PitchDetail() {
         </button>
       </header>
 
+      {loading ? renderSkeleton() : (
       <main style={{ maxWidth: 860, margin: '0 auto', padding: '24px 20px' }}>
         {/* Photo Gallery Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10, height: 260, borderRadius: 20, overflow: 'hidden', marginBottom: 24 }}>
@@ -244,6 +267,7 @@ export default function PitchDetail() {
           </div>
         </div>
       </main>
+      )}
 
       {/* --- BOOKING FLOW MODAL --- */}
       {showBookingModal && (
@@ -461,6 +485,15 @@ export default function PitchDetail() {
         .detail-layout { display: grid; grid-template-columns: 2fr 1.2fr; gap: 24px; }
         @media(max-width: 768px) {
           .detail-layout { grid-template-columns: 1fr; }
+        }
+        @media(max-width: 375px) {
+          main { padding: 16px 12px !important; }
+          .detail-layout { gap: 16px; }
+          h1 { font-size: 32px !important; }
+        }
+        @keyframes skeletonPulse {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 0.35; }
         }
       `}</style>
     </div>
