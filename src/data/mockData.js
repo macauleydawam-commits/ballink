@@ -1,5 +1,14 @@
-// BallLink mock data — Stage 3
+// BallLink mock data — Stage 3 / Stage 9
 // Structured for easy swap to live API calls.
+
+export const DEFAULT_PLAYERS = [
+  { id: 'p-001', name: 'Emeka Okafor', age: 24, position: 'Forward', foot: 'Right', rating: 4.4 },
+  { id: 'p-002', name: 'Sade Ajayi', age: 22, position: 'Midfielder', foot: 'Left', rating: 4.2 },
+  { id: 'p-003', name: 'Chidi Nwosu', age: 26, position: 'Defender', foot: 'Right', rating: 4.0 },
+  { id: 'p-004', name: 'Amina Bello', age: 23, position: 'Forward', foot: 'Both', rating: 4.6 },
+  { id: 'p-005', name: 'Daniel Uche', age: 28, position: 'Goalkeeper', foot: 'Right', rating: 4.1 },
+  { id: 'p-006', name: 'Grace Eze', age: 21, position: 'Midfielder', foot: 'Right', rating: 4.3 },
+];
 
 export const FEATURED_PITCHES = [
   {

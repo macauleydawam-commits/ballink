@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
-import { FEATURED_PITCHES } from '../data/mockData';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import { DEFAULT_PLAYERS } from '../data/mockData'; 
 
 const OnboardingContext = createContext();
 
@@ -21,182 +22,149 @@ const buildDefaultSquad = (playerName, playerPosition) => ({
   cf2: 'Tap to assign',
 });
 
-const DEFAULT_PLAYERS = [
-  { id: 'p-001', name: 'Emeka Okafor', age: 24, position: 'Forward', foot: 'Right', rating: 4.4 },
-  { id: 'p-002', name: 'Sade Ajayi', age: 22, position: 'Midfielder', foot: 'Left', rating: 4.2 },
-  { id: 'p-003', name: 'Chidi Nwosu', age: 26, position: 'Defender', foot: 'Right', rating: 4.0 },
-  { id: 'p-004', name: 'Amina Bello', age: 23, position: 'Forward', foot: 'Both', rating: 4.6 },
-  { id: 'p-005', name: 'Daniel Uche', age: 28, position: 'Goalkeeper', foot: 'Right', rating: 4.1 },
-  { id: 'p-006', name: 'Grace Eze', age: 21, position: 'Midfielder', foot: 'Right', rating: 4.3 },
-];
-
-const DEFAULT_CHATS = [
-  {
-    id: 'chat-001',
-    name: 'Rayfield Friday Ballers',
-    isGroup: true,
-    participants: ['You', 'Tunde Bello', 'Amaka Nwosu', 'Samuel Adams'],
-    preview: 'Organiser: Kick-off is 20:00 sharp, don\'t be late!',
-    lastMessageTime: '11:15 AM',
-    unread: 2,
-  },
-  {
-    id: 'chat-002',
-    name: 'Terminus Arena Booking Hub',
-    isGroup: true,
-    participants: ['You', 'Organiser', 'Aliyu'],
-    preview: 'Your slot booking at Terminus Turf was confirmed',
-    lastMessageTime: 'Yesterday',
-    unread: 0,
-  },
-  {
-    id: 'chat-003',
-    name: 'Chukwuemeka A.',
-    isGroup: false,
-    participants: ['You', 'Chukwuemeka A.'],
-    preview: 'Are you available for the 5-a-side match tonight?',
-    lastMessageTime: 'Yesterday',
-    unread: 1,
-  },
-];
-
-const DEFAULT_MESSAGES = {
-  'chat-001': [
-    { id: 'msg-001', sender: 'Organiser', text: 'Kick-off is 20:00 sharp, don\'t be late!', time: '11:15 AM', outgoing: false },
-    { id: 'msg-002', sender: 'You', text: 'I\'ll be there early to help set up.', time: '11:16 AM', outgoing: true },
-  ],
-  'chat-002': [
-    { id: 'msg-003', sender: 'Terminus Admin', text: 'Your slot booking at Terminus Turf was confirmed', time: 'Yesterday', outgoing: false },
-    { id: 'msg-004', sender: 'You', text: 'Thanks! See you there.', time: 'Yesterday', outgoing: true },
-  ],
-  'chat-003': [
-    { id: 'msg-005', sender: 'Chukwuemeka A.', text: 'Are you available for the 5-a-side match tonight?', time: 'Yesterday', outgoing: false },
-  ],
+const MOCK_PROFILE = {
+  userType: 'player',
+  name: 'Guest Player',
+  sex: 'Male',
+  position: 'Midfielder',
+  location: 'Jos',
+  skillLevel: 'Beginner',
+  age: 18,
+  preferredFoot: 'Right',
+  businessName: '',
+  contactNumber: '',
+  avatar: null,
+  stats: { matchesPlayed: 0, goals: 0, assists: 0, mvpAwards: 0 },
+  rating: 0,
 };
 
-const CURRENT_OWNER_ID = 'owner-001';
-
 export function OnboardingProvider({ children }) {
-  const [userProfile, setUserProfile] = useState({
-    userType: 'player', // 'player' or 'owner'
-    name: 'Gyang Pam',
-    sex: 'Male',
-    position: 'Midfielder',
-    location: 'Rayfield',
-    skillLevel: 'Intermediate',
-    age: 24,
-    preferredFoot: 'Right',
-    businessName: 'Jos Turf City',
-    contactNumber: '+234 803 123 4567',
-    avatar: null, // base64 data-URL of profile photo
-    stats: {
-      matchesPlayed: 28,
-      goals: 12,
-      assists: 7,
-      mvpAwards: 4,
-    },
-    rating: 4.3,
-  });
-
+  const [session, setSession] = useState(null);
+  const [userProfile, setUserProfile] = useState(MOCK_PROFILE);
   const [teamBuilder, setTeamBuilder] = useState({
     teamName: 'BallLink United',
     formation: '4-3-3',
     manager: 'You',
-    bench: ['Obinna Chukwu', 'Tunde Bello', 'Amaka Nwosu', 'Samuel Adams'],
+    bench: [],
     availablePlayers: DEFAULT_PLAYERS,
-    squad: buildDefaultSquad('Gyang Pam', 'Midfielder'),
+    squad: buildDefaultSquad('Guest', 'Midfielder'),
   });
+  const [chats, setChats] = useState([]);
+  const [chatMessages, setChatMessages] = useState({});
+  const [pitches, setPitches] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [chats, setChats] = useState(DEFAULT_CHATS);
-  const [chatMessages, setChatMessages] = useState(DEFAULT_MESSAGES);
+  // Initialize Supabase Auth
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
 
-  // Pitches state (initialized from mock data, editable by users)
-  const [pitches, setPitches] = useState(() => FEATURED_PITCHES.map((pitch) => ({
-    ...pitch,
-    ownerId: pitch.id === 'pitch-002' ? CURRENT_OWNER_ID : 'owner-002',
-    availableSlots: pitch.availableSlots || ['17:00', '18:00', '20:00'],
-    photos: pitch.photos || ['Main pitch', 'Floodlights', 'Locker room'],
-  })));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
 
-  // Bookings state (upcoming and past)
-  const [bookings, setBookings] = useState([
-    {
-      id: 'book-101',
-      pitchId: 'pitch-002',
-      pitchName: 'Rock City Football Centre',
-      ownerId: CURRENT_OWNER_ID,
-      ownerStatus: 'pending',
-      date: '2026-07-12',
-      time: '18:00',
-      duration: 2,
-      totalPrice: 24000,
-      status: 'upcoming',
-    },
-    {
-      id: 'book-102',
-      pitchId: 'pitch-004',
-      pitchName: 'Naraguta Mini Pitch',
-      ownerId: 'owner-002',
-      ownerStatus: 'accepted',
-      date: '2026-07-08',
-      time: '19:00',
-      duration: 1,
-      totalPrice: 6000,
-      status: 'past',
-    },
-    {
-      id: 'book-103',
-      pitchId: 'pitch-002',
-      pitchName: 'Rock City Football Centre',
-      ownerId: CURRENT_OWNER_ID,
-      ownerStatus: 'accepted',
-      date: '2026-07-18',
-      time: '19:00',
-      duration: 1,
-      totalPrice: 12000,
-      status: 'upcoming',
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Fetch Data when Session Changes
+  useEffect(() => {
+    if (session?.user) {
+      fetchUserProfile(session.user.id);
+      fetchPitches();
+      fetchBookings(session.user.id);
+    } else {
+      // Reset to defaults if not logged in
+      setUserProfile(MOCK_PROFILE);
+      setPitches([]);
+      setBookings([]);
+      setLoading(false);
     }
-  ]);
+  }, [session]);
 
-  const updateProfile = (data) => {
-    setUserProfile((prev) => ({ ...prev, ...data }));
+  const fetchUserProfile = async (userId) => {
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+    if (!error && data) {
+      setUserProfile({
+        id: data.id,
+        userType: data.user_type,
+        name: data.name || '',
+        sex: data.sex || '',
+        position: data.position || '',
+        location: data.location || '',
+        skillLevel: data.skill_level || '',
+        age: data.age || 18,
+        preferredFoot: data.preferred_foot || '',
+        businessName: data.business_name || '',
+        contactNumber: data.contact_number || '',
+        avatar: data.avatar_url || null,
+        stats: {
+          matchesPlayed: data.stats_matches_played || 0,
+          goals: data.stats_goals || 0,
+          assists: data.stats_assists || 0,
+          mvpAwards: data.stats_mvp_awards || 0,
+        },
+        rating: data.rating || 0,
+      });
+    }
+    setLoading(false);
   };
 
-  const resetProfile = () => {
-    setUserProfile({
-      userType: 'player',
-      name: '',
-      sex: '',
-      position: '',
-      location: '',
-      skillLevel: '',
-      age: 18,
-      preferredFoot: '',
-      businessName: '',
-      contactNumber: '',
-      avatar: null,
-      stats: {
-        matchesPlayed: 0,
-        goals: 0,
-        assists: 0,
-        mvpAwards: 0,
-      },
-      rating: 0,
-    });
-    setTeamBuilder({
-      teamName: 'BallLink United',
-      formation: '4-3-3',
-      manager: 'You',
-      bench: ['Obinna Chukwu', 'Tunde Bello', 'Amaka Nwosu', 'Samuel Adams'],
-      availablePlayers: DEFAULT_PLAYERS,
-      squad: buildDefaultSquad('', ''),
-    });
+  const fetchPitches = async () => {
+    const { data, error } = await supabase.from('pitches').select('*').order('created_at', { ascending: false });
+    if (!error && data) {
+      setPitches(data.map(p => ({
+        ...p,
+        pricePerHour: p.price_per_hour,
+        reviewCount: p.review_count,
+        availableSlots: p.available_slots || [],
+        imageGradient: p.image_gradient || 'from-[#1a3a5c] via-[#0f2540] to-night-navy',
+        accentColor: p.accent_color || '#52B788',
+        ownerId: p.owner_id
+      })));
+    }
   };
 
-  const updateTeamBuilder = (data) => {
-    setTeamBuilder((prev) => ({ ...prev, ...data }));
+  const fetchBookings = async (userId) => {
+    const { data, error } = await supabase.from('bookings').select('*, pitches(name)').or(`player_id.eq.${userId},owner_id.eq.${userId}`);
+    if (!error && data) {
+      setBookings(data.map(b => ({
+        ...b,
+        pitchName: b.pitches?.name || 'Unknown Pitch',
+        ownerStatus: b.owner_status,
+        totalPrice: b.total_price,
+        pitchId: b.pitch_id,
+        ownerId: b.owner_id,
+        playerId: b.player_id
+      })));
+    }
   };
 
+  const updateProfile = async (data) => {
+    if (!session?.user) return;
+    const updates = {
+      name: data.name,
+      user_type: data.userType,
+      sex: data.sex,
+      position: data.position,
+      location: data.location,
+      skill_level: data.skillLevel,
+      age: data.age,
+      preferred_foot: data.preferredFoot,
+      business_name: data.businessName,
+      contact_number: data.contactNumber,
+      avatar_url: data.avatar,
+    };
+    Object.keys(updates).forEach(key => updates[key] === undefined && delete updates[key]);
+    await supabase.from('profiles').update(updates).eq('id', session.user.id);
+    await fetchUserProfile(session.user.id);
+  };
+
+  const resetProfile = () => {};
+
+  // Team Builder (Mocked for now as we transition)
+  const updateTeamBuilder = (data) => setTeamBuilder(prev => ({...prev, ...data}));
   const assignTeamPlayer = (positionId, playerName, fromBench = false) => {
     setTeamBuilder((prev) => {
       const currentPlayer = prev.squad[positionId];
@@ -209,54 +177,29 @@ export function OnboardingProvider({ children }) {
       }
       return {
         ...prev,
-        squad: {
-          ...prev.squad,
-          [positionId]: playerName,
-        },
+        squad: { ...prev.squad, [positionId]: playerName },
         bench: nextBench,
       };
     });
   };
-
   const clearTeamPosition = (positionId) => {
     setTeamBuilder((prev) => {
       const removedPlayer = prev.squad[positionId];
       const nextBench = removedPlayer && removedPlayer !== 'Tap to assign' && !prev.bench.includes(removedPlayer)
-        ? [...prev.bench, removedPlayer]
-        : prev.bench;
-      return {
-        ...prev,
-        squad: {
-          ...prev.squad,
-          [positionId]: 'Tap to assign',
-        },
-        bench: nextBench,
-      };
+        ? [...prev.bench, removedPlayer] : prev.bench;
+      return { ...prev, squad: { ...prev.squad, [positionId]: 'Tap to assign' }, bench: nextBench };
     });
   };
-
   const addBenchPlayer = (playerName) => {
     setTeamBuilder((prev) => {
       if (prev.bench.includes(playerName)) return prev;
-      return {
-        ...prev,
-        bench: [...prev.bench, playerName],
-      };
+      return { ...prev, bench: [...prev.bench, playerName] };
     });
   };
-
   const removeBenchPlayer = (playerName) => {
-    setTeamBuilder((prev) => ({
-      ...prev,
-      bench: prev.bench.filter(name => name !== playerName),
-    }));
+    setTeamBuilder((prev) => ({ ...prev, bench: prev.bench.filter(name => name !== playerName) }));
   };
-
-  const setTeamManager = (manager) => {
-    setTeamBuilder((prev) => ({ ...prev, manager }));
-  };
-
-  // Create a fresh team with a new name, clearing all squad/bench assignments
+  const setTeamManager = (manager) => setTeamBuilder((prev) => ({ ...prev, manager }));
   const createNewTeam = (teamName) => {
     setTeamBuilder({
       teamName: teamName || 'New Team',
@@ -268,119 +211,71 @@ export function OnboardingProvider({ children }) {
     });
   };
 
-  // Pitch actions
-  const updatePitch = (id, updatedData) => {
-    setPitches(prev => prev.map(p => p.id === id ? { ...p, ...updatedData } : p));
-  };
-
-  // Booking actions
-  const addBooking = (newBooking) => {
-    setBookings(prev => [
-      {
-        id: `book-${Date.now()}`,
-        status: 'upcoming',
-        ownerStatus: 'pending',
-        ownerId: newBooking.ownerId || 'owner-unknown',
-        ...newBooking
-      },
-      ...prev
-    ]);
-  };
-
-  const updateBooking = (id, updatedData) => {
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, ...updatedData } : b));
-  };
-
-  const cancelBooking = (id) => {
-    setBookings(prev => prev.filter(b => b.id !== id));
-  };
-
-  const acceptBooking = (id) => updateBooking(id, { ownerStatus: 'accepted' });
-  const rejectBooking = (id) => updateBooking(id, { ownerStatus: 'rejected' });
-
-  const createPitch = (pitchData) => {
-    const id = `pitch-${Date.now()}`;
+  const createPitch = async (pitchData) => {
+    if (!session?.user) return;
     const newPitch = {
-      id,
-      ownerId: CURRENT_OWNER_ID,
+      owner_id: session.user.id,
       name: pitchData.name,
       location: pitchData.location,
       surface: pitchData.surface,
-      pricePerHour: Number(pitchData.pricePerHour),
-      rating: 4.5,
-      reviewCount: 3,
-      available: true,
-      tags: pitchData.tags || ['Floodlit', 'Water'],
-      availableSlots: pitchData.availableSlots,
-      photos: pitchData.photos,
-      contactNumber: pitchData.contactNumber || userProfile.contactNumber,
-      ownerName: userProfile.businessName,
-      imageGradient: pitchData.imageGradient || 'from-[#1a3a5c] via-[#0f2540] to-night-navy',
-      accentColor: pitchData.accentColor || '#52B788',
+      price_per_hour: Number(pitchData.pricePerHour),
+      tags: pitchData.tags || [],
+      available_slots: pitchData.availableSlots || [],
+      photos: pitchData.photos || [],
+      contact_number: pitchData.contactNumber || userProfile.contactNumber,
+      image_gradient: pitchData.imageGradient || 'from-[#1a3a5c] via-[#0f2540] to-night-navy',
+      accent_color: pitchData.accentColor || '#52B788',
     };
-    setPitches(prev => [newPitch, ...prev]);
-    return id;
+    await supabase.from('pitches').insert(newPitch);
+    fetchPitches();
   };
 
-  const markChatRead = (chatId) => {
-    setChats(prev => prev.map((chat) => chat.id === chatId ? { ...chat, unread: 0 } : chat));
+  const updatePitch = async (id, updatedData) => {
+    if (!session?.user) return;
+    await supabase.from('pitches').update(updatedData).eq('id', id);
+    fetchPitches();
   };
 
-  const sendChatMessage = (chatId, text) => {
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    setChatMessages((prev) => ({
-      ...prev,
-      [chatId]: [
-        ...(prev[chatId] || []),
-        {
-          id: `msg-${Date.now()}`,
-          sender: 'You',
-          text,
-          time,
-          outgoing: true,
-        },
-      ],
-    }));
-    setChats((prev) => prev.map((chat) => chat.id === chatId
-      ? { ...chat, preview: text, lastMessageTime: time, unread: 0 }
-      : chat
-    ));
-  };
-
-  const createChatWithPlayer = (playerName) => {
-    const existing = chats.find((chat) => !chat.isGroup && chat.participants.includes(playerName));
-    if (existing) return existing.id;
-
-    const newId = `chat-${Date.now()}`;
-    const newChat = {
-      id: newId,
-      name: playerName,
-      isGroup: false,
-      participants: ['You', playerName],
-      preview: 'Ready when you are.',
-      lastMessageTime: 'Now',
-      unread: 0,
+  const addBooking = async (newBooking) => {
+    if (!session?.user) return;
+    const dbBooking = {
+      pitch_id: newBooking.pitchId,
+      player_id: session.user.id,
+      owner_id: newBooking.ownerId,
+      date: newBooking.date,
+      time: newBooking.time,
+      duration: newBooking.duration,
+      total_price: newBooking.totalPrice,
+      status: 'upcoming',
+      owner_status: 'pending'
     };
-
-    setChats((prev) => [newChat, ...prev]);
-    setChatMessages((prev) => ({
-      ...prev,
-      [newId]: [
-        {
-          id: `msg-${Date.now()}-0`,
-          sender: playerName,
-          text: 'Ready when you are. Let me know the details.',
-          time: 'Now',
-          outgoing: false,
-        },
-      ],
-    }));
-
-    return newId;
+    await supabase.from('bookings').insert(dbBooking);
+    fetchBookings(session.user.id);
   };
+
+  const updateBooking = async (id, updatedData) => {
+    if (!session?.user) return;
+    await supabase.from('bookings').update(updatedData).eq('id', id);
+    fetchBookings(session.user.id);
+  };
+
+  const cancelBooking = async (id) => {
+    if (!session?.user) return;
+    await supabase.from('bookings').delete().eq('id', id);
+    fetchBookings(session.user.id);
+  };
+
+  const acceptBooking = (id) => updateBooking(id, { owner_status: 'accepted' });
+  const rejectBooking = (id) => updateBooking(id, { owner_status: 'rejected' });
+
+  // Chat placeholders
+  const markChatRead = () => {};
+  const sendChatMessage = () => {};
+  const createChatWithPlayer = () => 'chat-000';
 
   return (
     <OnboardingContext.Provider value={{
+      session,
       userProfile,
       updateProfile,
       resetProfile,
@@ -398,7 +293,7 @@ export function OnboardingProvider({ children }) {
       sendChatMessage,
       createChatWithPlayer,
       pitches,
-      currentOwnerId: CURRENT_OWNER_ID,
+      currentOwnerId: session?.user?.id || 'guest',
       createPitch,
       updatePitch,
       bookings,
@@ -408,7 +303,7 @@ export function OnboardingProvider({ children }) {
       rejectBooking,
       cancelBooking
     }}>
-      {children}
+      {!loading && children}
     </OnboardingContext.Provider>
   );
 }

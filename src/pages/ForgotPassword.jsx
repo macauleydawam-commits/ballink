@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Mail, CheckCircle } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
@@ -8,7 +9,7 @@ export default function ForgotPassword() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email.trim()) {
       setError('Email address is required');
@@ -20,9 +21,14 @@ export default function ForgotPassword() {
     }
 
     setError('');
-    // Mock submit recovery email
-    console.log(`[Auth Mock] Password recovery request sent to: ${email}`);
-    setSubmitted(true);
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (resetError) {
+      setError(resetError.message);
+    } else {
+      setSubmitted(true);
+    }
   };
 
   return (

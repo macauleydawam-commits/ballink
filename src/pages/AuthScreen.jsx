@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Mail, Lock, AlertCircle } from 'lucide-react';
 import { useOnboarding } from '../context/OnboardingContext';
+import { supabase } from '../lib/supabase';
 
 export default function AuthScreen() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userProfile, updateProfile } = useOnboarding();
+  const { userProfile } = useOnboarding();
 
   // Check if we arrived here directly from a "Log In" action vs. onboarding
   const isDirectLogin = location.pathname === '/login';
@@ -20,17 +21,22 @@ export default function AuthScreen() {
   const [userRole, setUserRole] = useState(userProfile.userType || 'player'); // Default role if direct login
   const [errors, setErrors] = useState({});
 
-  const handleOAuth = (provider) => {
-    console.log(`[Auth Mock] Authenticating with ${provider} for role: ${userRole}`);
-    // Simulate authentication delay
-    setTimeout(() => {
-      // Direct user to correct dashboard type
-      if (userRole === 'owner') {
-        navigate('/owner-dashboard');
-      } else {
-        navigate('/dashboard');
-      }
-    }, 800);
+  const [loading, setLoading] = useState(false);
+  const [authError, setAuthError] = useState(null);
+
+  const handleOAuth = async (provider) => {
+    setLoading(true);
+    setAuthError(null);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: provider.toLowerCase(),
+      });
+      if (error) throw error;
+    } catch (err) {
+      setAuthError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const validate = () => {
@@ -49,16 +55,36 @@ export default function AuthScreen() {
     return Object.keys(tempErrors).length === 0;
   };
 
-  const handleEmailSubmit = (e) => {
+  const handleEmailSubmit = async (e) => {
     e.preventDefault();
-    if (validate()) {
-      console.log(`[Auth Mock] Email Auth: ${email}, Action: ${isLoginMode ? 'Login' : 'Signup'}, Role: ${userRole}`);
-      // Simulate success and redirect
-      if (userRole === 'owner') {
-        navigate('/owner-dashboard');
+    if (!validate()) return;
+    
+    setLoading(true);
+    setAuthError(null);
+    
+    try {
+      if (isLoginMode) {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        
+        // Let the OnboardingContext fetch the profile and handle state
+        // Just redirect based on the last known role or go to dashboard
+        navigate(userRole === 'owner' ? '/owner-dashboard' : '/dashboard');
       } else {
-        navigate('/dashboard');
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { userType: userRole, name: email.split('@')[0] }
+          }
+        });
+        if (error) throw error;
+        navigate(userRole === 'owner' ? '/owner-dashboard' : '/dashboard');
       }
+    } catch (err) {
+      setAuthError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -202,6 +228,11 @@ export default function AuthScreen() {
           {/* Email + Password Form */}
           {showEmailFields && (
             <form onSubmit={handleEmailSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 20 }}>
+              {authError && (
+                <div style={{ padding: '12px', background: 'rgba(230,57,70,0.1)', border: '1px solid #E63946', borderRadius: 8, color: '#E63946', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <AlertCircle size={16} /> {authError}
+                </div>
+              )}
               {/* Email */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <label htmlFor="email" style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 600, color: 'rgba(245,245,240,0.7)' }}>
@@ -260,14 +291,15 @@ export default function AuthScreen() {
               {/* Submit Email Account */}
               <button
                 type="submit"
+                disabled={loading}
                 style={{
                   width: '100%', padding: '14px', borderRadius: 12, background: 'linear-gradient(135deg, #F4A300, #FFB800)',
                   border: 'none', fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 700,
-                  color: '#0D1B2A', cursor: 'pointer', marginTop: 6,
-                  boxShadow: '0 6px 20px rgba(244,163,0,0.3)',
+                  color: '#0D1B2A', cursor: loading ? 'not-allowed' : 'pointer', marginTop: 6,
+                  boxShadow: '0 6px 20px rgba(244,163,0,0.3)', opacity: loading ? 0.7 : 1
                 }}
               >
-                {isLoginMode ? 'Log In with Email' : 'Create Account'}
+                {loading ? 'Processing...' : (isLoginMode ? 'Log In with Email' : 'Create Account')}
               </button>
             </form>
           )}

@@ -37,16 +37,17 @@ export default function OnboardingOwner() {
     return Object.keys(tempErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validate()) {
-      updateProfile({
+      await updateProfile({
         ...formData,
         userType: 'owner',
       });
       navigate('/auth');
     }
   };
+
 
   return (
     <div style={{ minHeight: '100vh', background: '#0D1B2A', display: 'flex', flexDirection: 'column' }}>
