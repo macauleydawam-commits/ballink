@@ -6,60 +6,71 @@ import {
   Clock, LogOut, ChevronRight, Filter, AlertCircle, Plus, Send,
   Calendar, Trash2, Edit3, X, CheckCircle, Trophy, Minus
 } from 'lucide-react';
+import StarRating from '../components/ui/StarRating';
+import TeamBuilderPanel from '../components/TeamBuilderPanel';
 import {
   NEARBY_PITCHES,
   AVAILABLE_PITCHES_TODAY,
   MATCHES_HAPPENING_TODAY,
   NEED_PLAYERS_GAMES,
-  FEATURED_PITCHES,
   UPCOMING_TOURNAMENTS,
   LIVE_MATCHES
 } from '../data/mockData';
 
-const FORMATION_POSITIONS = [
-  { id: 'gk', label: 'GK', name: 'Goalkeeper', cx: 200, cy: 340 },
-  { id: 'ldf', label: 'LDF', name: 'Left Defender', cx: 80, cy: 260 },
-  { id: 'cdf', label: 'CDF', name: 'Centre Defender', cx: 200, cy: 270 },
-  { id: 'rdf', label: 'RDF', name: 'Right Defender', cx: 320, cy: 260 },
-  { id: 'lmf', label: 'LMF', name: 'Left Midfielder', cx: 80, cy: 170 },
-  { id: 'cmf', label: 'CMF', name: 'Centre Midfielder', cx: 200, cy: 190 },
-  { id: 'rmf', label: 'RMF', name: 'Right Midfielder', cx: 320, cy: 170 },
-  { id: 'amf', label: 'AMF', name: 'Attacking Midfielder', cx: 200, cy: 120 },
-  { id: 'lfw', label: 'LFW', name: 'Left Forward', cx: 100, cy: 60 },
-  { id: 'cfw', label: 'CFW', name: 'Centre Forward', cx: 200, cy: 50 },
-  { id: 'rfw', label: 'RFW', name: 'Right Forward', cx: 300, cy: 60 },
-];
+const FORMATIONS = {
+  '4-3-3': [
+    { id: 'gk', label: 'GK', cx: 200, cy: 340 },
+    { id: 'ldf', label: 'LDF', cx: 80, cy: 270 },
+    { id: 'cdf', label: 'CDF', cx: 200, cy: 270 },
+    { id: 'rdf', label: 'RDF', cx: 320, cy: 270 },
+    { id: 'lmf', label: 'LMF', cx: 80, cy: 180 },
+    { id: 'cmf', label: 'CMF', cx: 200, cy: 180 },
+    { id: 'rmf', label: 'RMF', cx: 320, cy: 180 },
+    { id: 'lfw', label: 'LFW', cx: 100, cy: 90 },
+    { id: 'cfw', label: 'CFW', cx: 200, cy: 90 },
+    { id: 'rfw', label: 'RFW', cx: 300, cy: 90 },
+  ],
+  '4-4-2': [
+    { id: 'gk', label: 'GK', cx: 200, cy: 340 },
+    { id: 'ldf', label: 'LDF', cx: 80, cy: 270 },
+    { id: 'cdf', label: 'CDF', cx: 200, cy: 270 },
+    { id: 'rdf', label: 'RDF', cx: 320, cy: 270 },
+    { id: 'lmf', label: 'LMF', cx: 80, cy: 190 },
+    { id: 'rmf', label: 'RMF', cx: 320, cy: 190 },
+    { id: 'lwf', label: 'LWF', cx: 90, cy: 110 },
+    { id: 'rwf', label: 'RWF', cx: 310, cy: 110 },
+    { id: 'cf1', label: 'CF', cx: 150, cy: 70 },
+    { id: 'cf2', label: 'CF', cx: 250, cy: 70 },
+    { id: 'cmf', label: 'CMF', cx: 200, cy: 140 },
+  ],
+};
 
 export default function PlayerDashboard() {
   const navigate = useNavigate();
   const {
     userProfile,
     resetProfile,
+    teamBuilder,
+    updateTeamBuilder,
+    assignTeamPlayer,
+    clearTeamPosition,
+    addBenchPlayer,
+    removeBenchPlayer,
+    setTeamManager,
     bookings,
     updateBooking,
-    cancelBooking
+    cancelBooking,
+    chats,
+    markChatRead,
+    pitches,
   } = useOnboarding();
 
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'matches', 'team', 'chat', 'profile'
+  const [activeSlot, setActiveSlot] = useState(null);
 
   // Search & Filter state
   const [searchArea, setSearchArea] = useState('');
   const [searchTime, setSearchTime] = useState('');
-
-  // Starting XI squad state
-  const [squad, setSquad] = useState({
-    gk: userProfile.position === 'Goalkeeper' ? userProfile.name : 'Tap to assign',
-    ldf: 'Tap to assign',
-    cdf: userProfile.position === 'Defender' ? userProfile.name : 'Tap to assign',
-    rdf: 'Tap to assign',
-    lmf: 'Tap to assign',
-    cmf: userProfile.position === 'Midfielder' ? userProfile.name : 'Tap to assign',
-    rmf: 'Tap to assign',
-    amf: 'Tap to assign',
-    lfw: 'Tap to assign',
-    cfw: userProfile.position === 'Forward' ? userProfile.name : 'Tap to assign',
-    rfw: 'Tap to assign',
-  });
 
   // Edit booking modal state
   const [showEditBookingModal, setShowEditBookingModal] = useState(false);
@@ -68,11 +79,22 @@ export default function PlayerDashboard() {
   const [editTime, setEditTime] = useState('');
   const [editDuration, setEditDuration] = useState(1);
 
-  const assignPlayer = (posId) => {
-    const pName = prompt("Enter player's name to assign to this position:");
-    if (pName && pName.trim()) {
-      setSquad(prev => ({ ...prev, [posId]: pName.trim() }));
-    }
+  const currentFormation = FORMATIONS[teamBuilder.formation] || FORMATIONS['4-3-3'];
+  const benchPlayers = teamBuilder.bench;
+  const availableRoster = teamBuilder.availablePlayers.filter((player) => {
+    const alreadyAssigned = Object.values(teamBuilder.squad).includes(player.name);
+    const alreadyBenched = teamBuilder.bench.includes(player.name);
+    return !alreadyAssigned && !alreadyBenched;
+  });
+
+  const activeSlotLabel = activeSlot
+    ? (currentFormation.find((pos) => pos.id === activeSlot)?.label || activeSlot)
+    : null;
+
+  const assignPlayerToSlot = (playerName, fromBench = false) => {
+    if (!activeSlot) return;
+    assignTeamPlayer(activeSlot, playerName, fromBench);
+    setActiveSlot(null);
   };
 
   const handleLogout = () => {
@@ -329,7 +351,7 @@ export default function PlayerDashboard() {
                 Featured Pitches
               </h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
-                {filterPitches(FEATURED_PITCHES).map(pitch => (
+                {filterPitches(pitches).map(pitch => (
                   <Link key={pitch.id} to={`/pitch/${pitch.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                     <div style={{ background: '#111c2a', borderRadius: 18, border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}>
                       <div style={{ height: 100, background: '#1B4332', display: 'flex', alignItems: 'center', justify: 'center' }}>
@@ -416,49 +438,28 @@ export default function PlayerDashboard() {
 
         {/* TEAM SIGNATURE VIEW */}
         {activeTab === 'team' && (
-          <div>
-            <div style={{ textAlign: 'center', marginBottom: 24 }}>
-              <h2 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 32, letterSpacing: 1, color: '#F5F5F0', margin: '0 0 6px' }}>
-                Squad Builder (Starting XI)
-              </h2>
-              <p style={{ fontSize: 13, color: 'rgba(245,245,240,0.5)', maxWidth: 440, margin: '0 auto' }}>
-                Tap on any marker on the pitch below to assign your teammates or build your club roster.
-              </p>
-            </div>
-
-            {/* Interactive Pitch */}
-            <div style={{
-              maxWidth: 420, margin: '0 auto', background: 'linear-gradient(to bottom, #1e5038, #143628)',
-              border: '2px solid rgba(82,183,136,0.3)', borderRadius: 28, overflow: 'hidden',
-              boxShadow: '0 24px 60px rgba(0,0,0,0.5)', position: 'relative'
-            }}>
-              <div style={{ padding: '24px 16px' }}>
-                <svg viewBox="0 0 400 400" width="100%" style={{ display: 'block', pointerEvents: 'auto' }}>
-                  <rect x="10" y="10" width="380" height="380" fill="none" stroke="white" strokeWidth="2.5" opacity="0.4" />
-                  <line x1="10" y1="200" x2="390" y2="200" stroke="white" strokeWidth="2" opacity="0.4" />
-                  <circle cx="200" cy="200" r="50" fill="none" stroke="white" strokeWidth="2" opacity="0.4" />
-                  <circle cx="200" cy="200" r="4" fill="white" opacity="0.6" />
-                  <rect x="110" y="10" width="180" height="50" fill="none" stroke="white" strokeWidth="1.5" opacity="0.3" />
-                  <rect x="110" y="340" width="180" height="50" fill="none" stroke="white" strokeWidth="1.5" opacity="0.3" />
-
-                  {FORMATION_POSITIONS.map(pos => {
-                    const assignedName = squad[pos.id];
-                    const isAssigned = assignedName !== 'Tap to assign';
-                    return (
-                      <g key={pos.id} onClick={() => assignPlayer(pos.id)} style={{ cursor: 'pointer' }}>
-                        <circle cx={pos.cx} cy={pos.cy} r="18" fill={isAssigned ? 'rgba(244,163,0,0.15)' : 'rgba(255,255,255,0.05)'} />
-                        <circle cx={pos.cx} cy={pos.cy} r="13" fill={isAssigned ? '#F4A300' : '#111c2a'} stroke={isAssigned ? '#FFD166' : 'rgba(82,183,136,0.5)'} strokeWidth="1.5" />
-                        <text x={pos.cx} y={pos.cy + 4} textAnchor="middle" fill={isAssigned ? '#0D1B2A' : '#52B788'} fontSize="9" fontWeight="700" fontFamily="Inter">{pos.label}</text>
-                        <rect x={pos.cx - 45} y={pos.cy + 18} width="90" height="15" rx="4" fill="rgba(13,27,42,0.85)" stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" />
-                        <text x={pos.cx} y={pos.cy + 29} textAnchor="middle" fill="#F5F5F0" fontSize="8" fontWeight="500" fontFamily="Inter">
-                          {assignedName.length > 15 ? assignedName.substring(0, 13) + '..' : assignedName}
-                        </text>
-                      </g>
-                    );
-                  })}
-                </svg>
+          <div style={{ display: 'grid', gap: 24 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h2 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 32, letterSpacing: 1, color: '#F5F5F0', margin: '0 0 6px' }}>
+                  Team Builder
+                </h2>
+                <p style={{ fontSize: 13, color: 'rgba(245,245,240,0.5)', maxWidth: 520, margin: 0 }}>
+                  Create your squad, assign players to the formation, and manage your bench and manager selection.
+                </p>
               </div>
+              <Link
+                to="/team-builder"
+                style={{
+                  alignSelf: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '10px 18px', borderRadius: 14, background: 'rgba(244,163,0,0.16)',
+                  color: '#F4A300', textDecoration: 'none', fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 700,
+                }}
+              >
+                Open Full Page Builder
+              </Link>
             </div>
+            <TeamBuilderPanel />
           </div>
         )}
 
@@ -468,24 +469,58 @@ export default function PlayerDashboard() {
             <h2 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 32, letterSpacing: 1, color: '#F5F5F0', marginBottom: 18 }}>
               Messages &amp; Groups
             </h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
+              <div style={{ minWidth: 200 }}>
+                <p style={{ fontSize: 13, color: 'rgba(245,245,240,0.5)', margin: 0 }}>Open a conversation to view full chat history and reply instantly.</p>
+              </div>
+              <Link
+                to="/chat"
+                style={{ padding: '10px 18px', borderRadius: 14, background: 'rgba(244,163,0,0.16)', color: '#F4A300', textDecoration: 'none', fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 700 }}
+              >
+                Open Full Chat Inbox
+              </Link>
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {[
-                { name: 'Rayfield Friday Ballers Group', msg: 'Organiser: Kick-off is 20:00 sharp, don\'t be late!', time: '11:15 AM', unread: 2 },
-                { name: 'Terminus Arena Booking Hub', msg: 'Your slot booking at Terminus Turf was confirmed', time: 'Yesterday', unread: 0 },
-                { name: 'Chukwuemeka A. (Organiser)', msg: 'Are you available for the 5-a-side match tonight?', time: 'Yesterday', unread: 1 },
-              ].map((c, i) => (
-                <div key={i} style={{ background: '#111c2a', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 16, display: 'flex', justify: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => alert("Chat logs and message delivery coming in Stage 5.")}>
+              {chats.length === 0 ? (
+                <div style={{ padding: 32, textAlign: 'center', background: '#111c2a', borderRadius: 20, border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(82,183,136,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', color: 'rgba(245,245,240,0.4)' }}>
+                    <MessageSquare size={24} />
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: '#F5F5F0', marginBottom: 6 }}>Start a conversation</div>
+                  <div style={{ fontSize: 13, color: 'rgba(245,245,240,0.55)', marginBottom: 18, maxWidth: 280, margin: '0 auto 18px' }}>Invite teammates from your builder or reach out to pitch organizers directly.</div>
+                  <Link to="/player-dashboard" style={{ padding: '10px 16px', borderRadius: 12, background: 'rgba(82,183,136,0.12)', color: '#52B788', textDecoration: 'none', fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 600, display: 'inline-block' }}>
+                    Go to Team Builder
+                  </Link>
+                </div>
+              ) : chats.map((c) => (
+                <div
+                  key={c.id}
+                  style={{
+                    background: '#111c2a',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    borderRadius: 16,
+                    padding: 16,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => {
+                    markChatRead(c.id);
+                    navigate(`/chat/${c.id}`);
+                  }}
+                >
                   <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
                     <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(82,183,136,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#52B788', fontWeight: 600 }}>
                       {c.name.substring(0, 2).toUpperCase()}
                     </div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 600, color: '#F5F5F0' }}>{c.name}</div>
-                      <div style={{ fontSize: 12, color: 'rgba(245,245,240,0.4)', marginTop: 2 }}>{c.msg}</div>
+                      <div style={{ fontSize: 12, color: 'rgba(245,245,240,0.4)', marginTop: 2 }}>{c.preview}</div>
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 11, color: 'rgba(245,245,240,0.3)' }}>{c.time}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(245,245,240,0.3)' }}>{c.lastMessageTime}</div>
                     {c.unread > 0 && <span style={{ display: 'inline-block', marginTop: 4, background: '#E63946', color: '#FFF', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 100 }}>{c.unread}</span>}
                   </div>
                 </div>
@@ -526,8 +561,39 @@ export default function PlayerDashboard() {
                     <span style={{ fontWeight: 600, color: '#52B788' }}>{userProfile.skillLevel || 'Intermediate'}</span>
                   </div>
                   <div style={{ display: 'flex', justify: 'space-between', fontSize: 13 }}>
+                    <span style={{ color: 'rgba(245,245,240,0.4)' }}>AGE</span>
+                    <span style={{ fontWeight: 600 }}>{userProfile.age || '24'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justify: 'space-between', fontSize: 13 }}>
+                    <span style={{ color: 'rgba(245,245,240,0.4)' }}>PREFERRED FOOT</span>
+                    <span style={{ fontWeight: 600 }}>{userProfile.preferredFoot || 'Right'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justify: 'space-between', fontSize: 13 }}>
                     <span style={{ color: 'rgba(245,245,240,0.4)' }}>SEX</span>
                     <span style={{ fontWeight: 600 }}>{userProfile.sex || 'Not Specified'}</span>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 18, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 18, display: 'grid', gap: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(245,245,240,0.5)' }}>Player Score</div>
+                      <div style={{ fontSize: 12, color: 'rgba(245,245,240,0.4)' }}>Community trust and performance</div>
+                    </div>
+                    <StarRating rating={userProfile.rating || 0} max={5} />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+                    {[
+                      { label: 'Matches', value: userProfile.stats?.matchesPlayed || 0 },
+                      { label: 'Goals', value: userProfile.stats?.goals || 0 },
+                      { label: 'Assists', value: userProfile.stats?.assists || 0 },
+                      { label: 'MVPs', value: userProfile.stats?.mvpAwards || 0 },
+                    ].map((item) => (
+                      <div key={item.label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 16, padding: 14, border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <div style={{ fontSize: 11, color: 'rgba(245,245,240,0.45)', marginBottom: 8 }}>{item.label}</div>
+                        <div style={{ fontWeight: 700, color: '#F5F5F0' }}>{item.value}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -553,9 +619,13 @@ export default function PlayerDashboard() {
                 </h3>
 
                 {bookings.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '40px 0', color: 'rgba(245,245,240,0.4)' }}>
-                    <Calendar size={32} style={{ marginBottom: 12, opacity: 0.5 }} />
-                    <p style={{ fontSize: 14 }}>No bookings listed. Go to the Home tab to reserve a slot!</p>
+                  <div style={{ textAlign: 'center', padding: '48px 24px', background: '#111c2a', borderRadius: 20, border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(82,183,136,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: 'rgba(245,245,240,0.4)' }}>
+                      <Calendar size={28} />
+                    </div>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: '#F5F5F0', marginBottom: 8 }}>No bookings yet</div>
+                    <div style={{ fontSize: 13, color: 'rgba(245,245,240,0.6)', marginBottom: 20, maxWidth: 300, margin: '0 auto 20px' }}>Browse available pitches in the Home tab and reserve a slot that works for your team.</div>
+                    <button onClick={() => setActiveTab('home')} style={{ padding: '11px 18px', borderRadius: 12, background: 'linear-gradient(135deg, #52B788, #1B4332)', color: '#F5F5F0', border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 700 }}>Find pitches</button>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -576,10 +646,13 @@ export default function PlayerDashboard() {
                             </span>
                             <span style={{ fontSize: 14, fontWeight: 600, color: '#F5F5F0' }}>{b.pitchName}</span>
                           </div>
-                          <div style={{ fontSize: 12, color: 'rgba(245,245,240,0.4)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ fontSize: 12, color: 'rgba(245,245,240,0.4)', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                             <span>Date: {b.date}</span>
                             <span>Time: {b.time} ({b.duration} hr)</span>
                             <span style={{ color: '#F4A300', fontFamily: '"JetBrains Mono", monospace' }}>₦{b.totalPrice.toLocaleString()}</span>
+                            {b.ownerStatus && (
+                              <span style={{ color: b.ownerStatus === 'accepted' ? '#52B788' : b.ownerStatus === 'rejected' ? '#E63946' : '#F4A300', fontWeight: 700 }}>{b.ownerStatus.toUpperCase()}</span>
+                            )}
                           </div>
                         </div>
 

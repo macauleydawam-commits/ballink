@@ -62,6 +62,26 @@ function Navbar() {
               {['How it Works', 'Pitches', 'Matches'][i]}
             </a>
           ))}
+          <Link to="/chat" style={{
+            fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 500,
+            color: 'rgba(245,245,240,0.6)', textDecoration: 'none',
+            transition: 'color 0.2s',
+          }}
+            onMouseEnter={e => e.target.style.color = '#F5F5F0'}
+            onMouseLeave={e => e.target.style.color = 'rgba(245,245,240,0.6)'}
+          >
+            Chat
+          </Link>
+          <Link to="/owner-dashboard" style={{
+            fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 500,
+            color: 'rgba(245,245,240,0.6)', textDecoration: 'none',
+            transition: 'color 0.2s',
+          }}
+            onMouseEnter={e => e.target.style.color = '#F5F5F0'}
+            onMouseLeave={e => e.target.style.color = 'rgba(245,245,240,0.6)'}
+          >
+            Owner Portal
+          </Link>
         </div>
 
         {/* Desktop CTA */}
@@ -113,6 +133,20 @@ function Navbar() {
               padding: '14px 0', borderBottom: '1px solid rgba(82,183,136,0.08)',
             }}>{label}</a>
           ))}
+          <Link to="/chat" onClick={() => setOpen(false)} style={{
+            display: 'block', fontFamily: 'Inter, sans-serif', fontSize: 16,
+            color: 'rgba(245,245,240,0.7)', textDecoration: 'none',
+            padding: '14px 0', borderBottom: '1px solid rgba(82,183,136,0.08)',
+          }}>
+            Chat
+          </Link>
+          <Link to="/owner-dashboard" onClick={() => setOpen(false)} style={{
+            display: 'block', fontFamily: 'Inter, sans-serif', fontSize: 16,
+            color: 'rgba(245,245,240,0.7)', textDecoration: 'none',
+            padding: '14px 0', borderBottom: '1px solid rgba(82,183,136,0.08)',
+          }}>
+            Owner Portal
+          </Link>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20 }}>
             <Link to="/login" onClick={() => setOpen(false)} style={{
               textAlign: 'center', fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 500,

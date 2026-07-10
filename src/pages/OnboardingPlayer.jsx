@@ -27,6 +27,8 @@ export default function OnboardingPlayer() {
     position: userProfile.position || '',
     location: userProfile.location || '',
     skillLevel: userProfile.skillLevel || '',
+    age: userProfile.age || '',
+    preferredFoot: userProfile.preferredFoot || '',
   });
 
   const [errors, setErrors] = useState({});
@@ -52,6 +54,8 @@ export default function OnboardingPlayer() {
     if (!formData.sex) tempErrors.sex = 'Please choose a option';
     if (!formData.position) tempErrors.position = 'Select your preferred position on the pitch';
     if (!formData.location) tempErrors.location = 'Which part of Jos do you play in?';
+    if (!formData.age || Number(formData.age) <= 0) tempErrors.age = 'Enter your age';
+    if (!formData.preferredFoot) tempErrors.preferredFoot = 'Choose a preferred foot';
     if (!formData.skillLevel) tempErrors.skillLevel = 'Choose your skill tier';
 
     setErrors(tempErrors);
@@ -213,6 +217,58 @@ export default function OnboardingPlayer() {
                 ))}
               </select>
               {errors.location && <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#E63946' }}>{errors.location}</span>}
+            </div>
+
+            {/* Age */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <label htmlFor="age" style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 600, color: 'rgba(245,245,240,0.7)' }}>
+                Age <span style={{ color: '#E63946' }}>*</span>
+              </label>
+              <input
+                id="age"
+                name="age"
+                type="number"
+                min="13"
+                placeholder="24"
+                value={formData.age}
+                onChange={handleChange}
+                style={{
+                  width: '100%', padding: '12px 16px', background: 'rgba(255,255,255,0.03)',
+                  border: errors.age ? '1px solid #E63946' : '1px solid rgba(82,183,136,0.2)',
+                  borderRadius: 12, fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#F5F5F0',
+                  outline: 'none', transition: 'border-color 0.2s',
+                }}
+              />
+              {errors.age && <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#E63946' }}>{errors.age}</span>}
+            </div>
+
+            {/* Preferred Foot */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 600, color: 'rgba(245,245,240,0.7)' }}>
+                Preferred Foot <span style={{ color: '#E63946' }}>*</span>
+              </span>
+              <div style={{ display: 'flex', gap: 10 }}>
+                {['Right', 'Left', 'Both'].map((option) => {
+                  const isSelected = formData.preferredFoot === option;
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => handleSelect('preferredFoot', option)}
+                      style={{
+                        flex: 1, padding: '12px 8px', borderRadius: 12, border: isSelected ? '1px solid #F4A300' : '1px solid rgba(255,255,255,0.08)',
+                        background: isSelected ? 'rgba(244,163,0,0.08)' : 'rgba(255,255,255,0.02)',
+                        color: isSelected ? '#F4A300' : 'rgba(245,245,240,0.6)',
+                        fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: isSelected ? 600 : 500,
+                        cursor: 'pointer', transition: 'all 0.2s',
+                      }}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
+              {errors.preferredFoot && <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#E63946' }}>{errors.preferredFoot}</span>}
             </div>
 
             {/* Skill Level */}

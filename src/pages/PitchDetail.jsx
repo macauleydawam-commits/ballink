@@ -46,6 +46,7 @@ export default function PitchDetail() {
     addBooking({
       pitchId: pitch.id,
       pitchName: pitch.name,
+      ownerId: pitch.ownerId,
       date: bookingDate,
       time: bookingTime,
       duration: bookingDuration,
@@ -209,7 +210,7 @@ export default function PitchDetail() {
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 14 }}>
                 <span style={{ fontSize: 11, color: 'rgba(245,245,240,0.4)', display: 'block', marginBottom: 8 }}>POPULAR SLOTS TODAY</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {['17:00', '18:00', '21:00'].map(slot => (
+                  {(pitch.availableSlots || ['17:00', '18:00', '21:00']).map(slot => (
                     <button
                       key={slot}
                       onClick={() => { setBookingTime(slot); setShowBookingModal(true); }}

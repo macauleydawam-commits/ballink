@@ -8,6 +8,9 @@ import AuthScreen from './pages/AuthScreen';
 import ForgotPassword from './pages/ForgotPassword';
 import PlayerDashboard from './pages/PlayerDashboard';
 import OwnerDashboard from './pages/OwnerDashboard';
+import TeamBuilder from './pages/TeamBuilder';
+import ChatInbox from './pages/ChatInbox';
+import ChatThread from './pages/ChatThread';
 import DetailsPlaceholder from './pages/DetailsPlaceholder';
 import PitchDetail from './pages/PitchDetail';
 import { OnboardingProvider } from './context/OnboardingContext';
@@ -26,7 +29,9 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/dashboard" element={<PlayerDashboard />} />
           <Route path="/owner-dashboard" element={<OwnerDashboard />} />
-          
+          <Route path="/team-builder" element={<TeamBuilder />} />
+          <Route path="/chat" element={<ChatInbox />} />
+          <Route path="/chat/:chatId" element={<ChatThread />} />
           <Route path="/pitch/:id" element={<PitchDetail />} />
           <Route path="/match/:id" element={<DetailsPlaceholder />} />
           <Route path="/tournament/:id" element={<DetailsPlaceholder />} />
